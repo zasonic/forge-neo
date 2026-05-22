@@ -1,0 +1,16 @@
+[
+  {
+    "name": "lcm-lora-sdxl",
+    "alias": "lcm-lora-sdxl",
+    "path": "C:\\forge-neo\\app\\models\\Lora\\lcm-lora-sdxl.safetensors",
+    "preview": null,
+    "metadata": null
+  },
+  {
+    "name": "detail-tweaker",
+    "alias": "detail-tweaker",
+    "path": "C:\\forge-neo\\app\\models\\Lora\\detail-tweaker.safetensors",
+    "preview": "C:\\forge-neo\\app\\models\\Lora\\detail-tweaker.preview.png",
+    "metadata": { "trained_words": ["detail"], "sd_version": "SDXL" }
+  }
+]

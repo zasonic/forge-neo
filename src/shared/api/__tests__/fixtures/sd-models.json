@@ -1,0 +1,17 @@
+[
+  {
+    "title": "v1-5-pruned-emaonly.safetensors [6ce0161689]",
+    "model_name": "v1-5-pruned-emaonly",
+    "hash": "6ce0161689",
+    "sha256": "6ce0161689b3853acaa03779ec93eafe75a02f4ced659bee03f50797806fa2fa",
+    "filename": "C:\\forge-neo\\app\\models\\Stable-diffusion\\v1-5-pruned-emaonly.safetensors",
+    "config": null
+  },
+  {
+    "title": "sd_xl_base_1.0.safetensors [31e35c80fc]",
+    "model_name": "sd_xl_base_1.0",
+    "hash": "31e35c80fc",
+    "sha256": "31e35c80fc4829d14f90153f4c74cd59c90b779f6afe05a74cd6120b893f7e5b",
+    "filename": "C:\\forge-neo\\app\\models\\Stable-diffusion\\sd_xl_base_1.0.safetensors"
+  }
+]
