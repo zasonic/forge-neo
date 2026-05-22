@@ -5,6 +5,9 @@
   "description": "Native Electron frontend for sd-webui-forge-classic (neo branch)",
   "main": "dist/main/index.js",
   "type": "module",
+  "engines": {
+    "node": ">=20.11.0"
+  },
   "scripts": {
     "dev": "tsx scripts/dev.ts",
     "build": "npm run build:main && npm run build:renderer",
