@@ -7,6 +7,7 @@ import {
   BACKEND_HOST,
   BACKEND_PORT_RANGE,
   READINESS_PROBE_PATH,
+  STARTUP_TIMEOUT_MS,
   STDOUT_READY_PATTERN,
   SUBPATH,
 } from '../../shared/constants.js';
@@ -22,6 +23,7 @@ export class Supervisor extends EventEmitter {
   private child: ChildProcess | null = null;
   private status: BackendStatus = { kind: 'idle' };
   private stopping = false;
+  private startupTimer: NodeJS.Timeout | null = null;
 
   constructor(private paths: InstallPaths) {
     super();
@@ -64,7 +66,6 @@ export class Supervisor extends EventEmitter {
     const args = [
       'launch.py',
       '--api',
-      '--listen',
       '--port',
       String(port),
       '--subpath',
@@ -102,11 +103,19 @@ export class Supervisor extends EventEmitter {
       const baseUrl = `http://${BACKEND_HOST}:${port}`;
       const ok = await this.probeReady(baseUrl);
       if (ok) {
+        this.clearStartupTimer();
         this.setStatus({ kind: 'ready', pid, port, baseUrl });
       } else {
         probed = false;
       }
     };
+
+    this.startupTimer = setTimeout(() => {
+      if (this.status.kind === 'starting') {
+        this.log('app', `startup timed out after ${STARTUP_TIMEOUT_MS / 1000}s; killing backend`);
+        void this.stop();
+      }
+    }, STARTUP_TIMEOUT_MS);
 
     this.child.stdout?.on('data', (chunk: string) => {
       buffered += chunk;
@@ -120,6 +129,7 @@ export class Supervisor extends EventEmitter {
     });
 
     this.child.on('exit', (code, signal) => {
+      this.clearStartupTimer();
       this.log('app', `backend exited code=${code} signal=${signal ?? 'null'}`);
       this.child = null;
       if (this.stopping) {
@@ -128,6 +138,13 @@ export class Supervisor extends EventEmitter {
         this.setStatus({ kind: 'crashed', code, signal });
       }
     });
+  }
+
+  private clearStartupTimer(): void {
+    if (this.startupTimer) {
+      clearTimeout(this.startupTimer);
+      this.startupTimer = null;
+    }
   }
 
   private async probeReady(baseUrl: string): Promise<boolean> {
@@ -140,12 +157,15 @@ export class Supervisor extends EventEmitter {
   }
 
   async stop(timeoutMs = 10_000): Promise<void> {
-    if (!this.child) return;
+    const child = this.child;
+    if (!child) return;
+    this.child = null;
     this.stopping = true;
+    this.clearStartupTimer();
     this.setStatus({ kind: 'stopping' });
-    const pid = this.child.pid;
+
+    const pid = child.pid;
     if (pid == null) {
-      this.child = null;
       this.setStatus({ kind: 'idle' });
       return;
     }
@@ -157,7 +177,7 @@ export class Supervisor extends EventEmitter {
         resolved = true;
         resolve();
       };
-      this.child?.once('exit', done);
+      child.once('exit', done);
       treeKill(pid, 'SIGTERM');
       setTimeout(() => {
         if (!resolved) treeKill(pid, 'SIGKILL', done);

@@ -17,7 +17,7 @@ import os
 import traceback
 from pathlib import Path
 
-_ERR_LOG = Path(__file__).parent.parent / "error.log"
+_ERR_LOG = Path(__file__).resolve().parents[1] / "error.log"
 
 
 def _log_error(exc: BaseException) -> None:

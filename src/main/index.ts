@@ -2,11 +2,13 @@ import { app, BrowserWindow, session } from 'electron';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Supervisor } from './backend/supervisor.js';
-import { settingsStore } from './config/store.js';
+import { Installer } from './backend/installer.js';
+import { settingsStore, setupStore } from './config/store.js';
 import { registerBackendChannel } from './ipc/backend-channel.js';
 import { registerSettingsChannel } from './ipc/settings-channel.js';
 import { registerDialogChannel } from './ipc/dialog-channel.js';
 import { registerFsChannel } from './ipc/fs-channel.js';
+import { registerInstallerChannel } from './ipc/installer-channel.js';
 import { FORGE_IMG_SCHEME, registerForgeImgProtocol, registerForgeImgPrivileged } from './protocols/forge-img.js';
 import { resolveInstallPaths } from '../shared/paths.js';
 
@@ -30,6 +32,9 @@ function buildCsp(): string {
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob: ${FORGE_IMG_SCHEME}:`,
     `connect-src ${connect.join(' ')}`,
+    // frame-src does not constrain Electron <webview> (separate WebContents).
+    // The webview security boundary is the will-navigate guard in
+    // src/renderer/pages/Legacy/LegacyFrame.tsx plus its sandbox attrs.
     `frame-src http://127.0.0.1:*`,
     `worker-src 'self' blob:`,
   ].join('; ');
@@ -72,11 +77,13 @@ async function createWindow(): Promise<void> {
 
   const paths = resolveInstallPaths(settingsStore.get('installRoot'));
   supervisor = new Supervisor(paths);
+  const installer = new Installer();
 
   registerBackendChannel(mainWindow, supervisor);
   registerSettingsChannel();
   registerDialogChannel(mainWindow);
   registerFsChannel(mainWindow);
+  registerInstallerChannel(mainWindow, installer);
 
   if (DEV_SERVER_URL) {
     await mainWindow.loadURL(DEV_SERVER_URL);
@@ -85,7 +92,8 @@ async function createWindow(): Promise<void> {
     await mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
 
-  if (settingsStore.get('autoStartBackend')) {
+  const installed = setupStore.get('installedAt') != null;
+  if (installed && settingsStore.get('autoStartBackend')) {
     void supervisor.start();
   }
 }

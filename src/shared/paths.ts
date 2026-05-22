@@ -4,6 +4,7 @@ export interface InstallPaths {
   root: string;
   runtime: string;
   python: string;
+  uvBin: string;
   app: string;
   venv: string;
   venvPython: string;
@@ -26,6 +27,7 @@ export function resolveInstallPaths(root: string): InstallPaths {
     root,
     runtime,
     python,
+    uvBin: join(runtime, 'bin', 'uv.exe'),
     app,
     venv,
     venvPython: join(venv, 'Scripts', 'python.exe'),
