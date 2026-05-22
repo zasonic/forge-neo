@@ -1,0 +1,32 @@
+{
+  "images": [
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+  ],
+  "parameters": {
+    "prompt": "a photo of a cat",
+    "negative_prompt": "",
+    "seed": 1234567890,
+    "subseed": -1,
+    "subseed_strength": 0,
+    "seed_resize_from_h": -1,
+    "seed_resize_from_w": -1,
+    "sampler_name": "Euler a",
+    "batch_size": 1,
+    "n_iter": 1,
+    "steps": 20,
+    "cfg_scale": 7,
+    "width": 512,
+    "height": 512,
+    "restore_faces": null,
+    "tiling": null,
+    "do_not_save_samples": false,
+    "do_not_save_grid": false,
+    "eta": null,
+    "enable_hr": false,
+    "hr_scale": 2,
+    "hr_upscaler": null,
+    "denoising_strength": null,
+    "save_images": true
+  },
+  "info": "{\"prompt\": \"a photo of a cat\", \"all_prompts\": [\"a photo of a cat\"], \"negative_prompt\": \"\", \"seed\": 1234567890, \"all_seeds\": [1234567890], \"subseed\": 2345678901, \"all_subseeds\": [2345678901], \"sampler_name\": \"Euler a\", \"cfg_scale\": 7.0, \"steps\": 20, \"width\": 512, \"height\": 512, \"sd_model_name\": \"v1-5-pruned-emaonly\", \"sd_model_hash\": \"6ce0161689\", \"clip_skip\": 1, \"version\": \"f2.0.1v1.10.1-1.10.1\"}"
+}

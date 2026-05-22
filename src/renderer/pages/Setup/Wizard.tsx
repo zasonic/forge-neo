@@ -22,17 +22,20 @@ export function SetupWizard(): ReactElement {
   const installer = useInstaller();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (installer.done) {
-      navigate('/legacy/txt2img', { replace: true });
-    }
-  }, [installer.done, navigate]);
+  const done = installer.done;
+  const currentStep = installer.current;
 
   useEffect(() => {
-    if (!installer.current) return;
-    const route = Object.entries(STEP_PATHS).find(([, step]) => step === installer.current);
+    if (done) {
+      navigate('/legacy/txt2img', { replace: true });
+    }
+  }, [done, navigate]);
+
+  useEffect(() => {
+    if (!currentStep) return;
+    const route = Object.entries(STEP_PATHS).find(([, step]) => step === currentStep);
     if (route) navigate(`/setup/${route[0]}`, { replace: true });
-  }, [installer.current, navigate]);
+  }, [currentStep, navigate]);
 
   const lastCompleted = installer.state?.lastCompletedStep ?? null;
 

@@ -7,7 +7,7 @@ on:
 
 jobs:
   smoke:
-    name: Linux typecheck + build + boot
+    name: Linux typecheck + lint + test + build + boot
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -23,6 +23,12 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
 
       - name: Build
         run: npm run build

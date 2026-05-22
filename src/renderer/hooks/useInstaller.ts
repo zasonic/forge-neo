@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { InstallerEvent, InstallerState } from '@shared/ipc/contract.js';
 import type { StepName } from '@shared/constants.js';
 
@@ -13,7 +13,6 @@ export interface StepStream {
 
 export interface InstallerView {
   state: InstallerState | null;
-  events: InstallerEvent[];
   streams: Partial<Record<StepName, StepStream>>;
   current: StepName | null;
   done: boolean;
@@ -33,12 +32,10 @@ export function useInstaller(): InstallerView {
   const [current, setCurrent] = useState<StepName | null>(null);
   const [done, setDone] = useState(false);
   const [cancelled, setCancelled] = useState(false);
-  const eventsRef = useRef<InstallerEvent[]>([]);
 
   useEffect(() => {
     void window.forge.installer.state().then(setState);
     const off = window.forge.installer.onEvent((event) => {
-      eventsRef.current = [...eventsRef.current.slice(-200), event];
       setStreams((prev) => reduce(prev, event));
       if (event.kind === 'step-start') {
         setCurrent(event.step);
@@ -60,13 +57,11 @@ export function useInstaller(): InstallerView {
 
   return {
     state,
-    events: eventsRef.current,
     streams,
     current,
     done,
     cancelled,
     start: async (from) => {
-      eventsRef.current = [];
       setStreams({});
       setDone(false);
       setCancelled(false);
@@ -75,7 +70,6 @@ export function useInstaller(): InstallerView {
     cancel: () => window.forge.installer.cancel(),
     reset: async () => {
       await window.forge.installer.reset();
-      eventsRef.current = [];
       setStreams({});
       setDone(false);
       setCancelled(false);

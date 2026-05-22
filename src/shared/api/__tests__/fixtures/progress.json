@@ -1,0 +1,16 @@
+{
+  "progress": 0.45,
+  "eta_relative": 12.4,
+  "state": {
+    "skipped": false,
+    "interrupted": false,
+    "job": "scripts_txt2img",
+    "job_count": 1,
+    "job_timestamp": "20260522180000",
+    "job_no": 0,
+    "sampling_step": 9,
+    "sampling_steps": 20
+  },
+  "current_image": null,
+  "textinfo": null
+}
