@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPC, type BackendStatus, type LogLine, type SettingsShape } from '../shared/ipc/contract.js';
+import { IPC, type BackendStatus, type LogLine, type SettingsShape, type InstallerEvent, type InstallerState } from '../shared/ipc/contract.js';
+import type { StepName } from '../shared/constants.js';
 
 const bridge = {
   backend: {
@@ -30,11 +31,26 @@ const bridge = {
     },
   },
   dialog: {
-    openImage: (): Promise<{ path: string; dataUrl: string } | null> => ipcRenderer.invoke(IPC.dialog.openImage),
+    openImage: (): Promise<{ path: string; dataUrl: string } | null> =>
+      ipcRenderer.invoke(IPC.dialog.openImage),
+    openDirectory: (): Promise<string | null> => ipcRenderer.invoke(IPC.dialog.openDirectory),
   },
   settings: {
     get: (): Promise<SettingsShape> => ipcRenderer.invoke(IPC.settings.get),
     set: (patch: Partial<SettingsShape>): Promise<SettingsShape> => ipcRenderer.invoke(IPC.settings.set, patch),
+  },
+  installer: {
+    state: (): Promise<InstallerState> => ipcRenderer.invoke(IPC.installer.state),
+    runFrom: (step?: StepName): Promise<void> => ipcRenderer.invoke(IPC.installer.runFrom, step),
+    cancel: (): Promise<void> => ipcRenderer.invoke(IPC.installer.cancel),
+    reset: (): Promise<void> => ipcRenderer.invoke(IPC.installer.reset),
+    setByoPython: (path: string | null): Promise<void> =>
+      ipcRenderer.invoke(IPC.installer.setByoPython, path),
+    onEvent: (cb: (e: InstallerEvent) => void): (() => void) => {
+      const fn = (_: unknown, e: InstallerEvent): void => cb(e);
+      ipcRenderer.on(IPC.installer.event, fn);
+      return () => ipcRenderer.off(IPC.installer.event, fn);
+    },
   },
 };
 

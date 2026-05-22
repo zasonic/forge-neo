@@ -13,4 +13,12 @@ export function registerDialogChannel(win: BrowserWindow): void {
     const buf = await readFile(path);
     return { path, dataUrl: `data:image/png;base64,${buf.toString('base64')}` };
   });
+
+  ipcMain.handle(IPC.dialog.openDirectory, async () => {
+    const result = await dialog.showOpenDialog(win, {
+      properties: ['openDirectory', 'createDirectory'],
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return result.filePaths[0]!;
+  });
 }

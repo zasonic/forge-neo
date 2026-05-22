@@ -1,3 +1,5 @@
+import type { StepName } from '../constants.js';
+
 export type BackendStatus =
   | { kind: 'idle' }
   | { kind: 'starting'; pid?: number }
@@ -9,6 +11,25 @@ export interface LogLine {
   stream: 'stdout' | 'stderr' | 'app';
   text: string;
   ts: number;
+}
+
+export type InstallerEvent =
+  | { kind: 'step-start'; step: StepName }
+  | { kind: 'progress'; step: StepName; percent: number | null; message: string }
+  | { kind: 'log'; step: StepName; line: string }
+  | { kind: 'step-complete'; step: StepName }
+  | { kind: 'step-failed'; step: StepName; error: string }
+  | { kind: 'done' }
+  | { kind: 'cancelled' };
+
+export interface InstallerState {
+  lastCompletedStep: StepName | null;
+  current: StepName | null;
+  running: boolean;
+  installedAt: number | null;
+  upstreamSha: string | null;
+  completedTorchSpecs: string[];
+  byoPython: string | null;
 }
 
 export const IPC = {
@@ -28,10 +49,19 @@ export const IPC = {
   },
   dialog: {
     openImage: 'dialog:openImage',
+    openDirectory: 'dialog:openDirectory',
   },
   settings: {
     get: 'settings:get',
     set: 'settings:set',
+  },
+  installer: {
+    state: 'installer:state',
+    runFrom: 'installer:runFrom',
+    cancel: 'installer:cancel',
+    reset: 'installer:reset',
+    setByoPython: 'installer:setByoPython',
+    event: 'installer:event',
   },
 } as const;
 
