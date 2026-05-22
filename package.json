@@ -1,0 +1,51 @@
+{
+  "name": "forge-neo",
+  "productName": "Forge Neo",
+  "version": "0.1.0",
+  "description": "Native Electron frontend for sd-webui-forge-classic (neo branch)",
+  "main": "dist/main/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx scripts/dev.ts",
+    "build": "npm run build:main && npm run build:renderer",
+    "build:main": "tsc -p tsconfig.node.json",
+    "build:renderer": "vite build",
+    "build:win": "npm run build && electron-builder --win nsis",
+    "typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.web.json --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write src",
+    "test": "vitest run",
+    "clean": "rimraf dist release"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.62.0",
+    "chokidar": "^4.0.0",
+    "electron-store": "^10.0.0",
+    "execa": "^9.5.0",
+    "get-port": "^7.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "tree-kill": "^1.2.2",
+    "zod": "^3.23.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "autoprefixer": "^10.4.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.0",
+    "eslint": "^9.15.0",
+    "postcss": "^8.4.0",
+    "prettier": "^3.4.0",
+    "rimraf": "^6.0.0",
+    "tailwindcss": "^3.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0"
+  }
+}

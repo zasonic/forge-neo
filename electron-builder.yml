@@ -1,0 +1,27 @@
+appId: io.forgeneo.app
+productName: Forge Neo
+directories:
+  output: release
+  buildResources: resources
+files:
+  - dist/**/*
+  - package.json
+extraResources:
+  - from: resources/bin
+    to: bin
+  - from: resources/extension
+    to: extension
+  - from: resources/model-manifests
+    to: model-manifests
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: resources/icons/icon.ico
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+asar: true
