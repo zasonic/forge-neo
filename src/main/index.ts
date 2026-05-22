@@ -2,11 +2,13 @@ import { app, BrowserWindow, session } from 'electron';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Supervisor } from './backend/supervisor.js';
-import { settingsStore } from './config/store.js';
+import { settingsStore, setupStore } from './config/store.js';
 import { registerBackendChannel } from './ipc/backend-channel.js';
 import { registerSettingsChannel } from './ipc/settings-channel.js';
 import { registerDialogChannel } from './ipc/dialog-channel.js';
 import { registerFsChannel } from './ipc/fs-channel.js';
+import { registerSetupChannel } from './ipc/setup-channel.js';
+import { SetupOrchestrator } from './setup/orchestrator.js';
 import { FORGE_IMG_SCHEME, registerForgeImgProtocol, registerForgeImgPrivileged } from './protocols/forge-img.js';
 import { resolveInstallPaths } from '../shared/paths.js';
 
@@ -19,6 +21,7 @@ const isDev = Boolean(DEV_SERVER_URL);
 
 let mainWindow: BrowserWindow | null = null;
 let supervisor: Supervisor | null = null;
+let orchestrator: SetupOrchestrator | null = null;
 
 function buildCsp(): string {
   const dev = isDev ? "'unsafe-eval' 'unsafe-inline'" : '';
@@ -70,13 +73,16 @@ async function createWindow(): Promise<void> {
 
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
-  const paths = resolveInstallPaths(settingsStore.get('installRoot'));
-  supervisor = new Supervisor(paths);
+  const resolvePaths = (): ReturnType<typeof resolveInstallPaths> =>
+    resolveInstallPaths(settingsStore.get('installRoot'));
+  supervisor = new Supervisor(resolvePaths());
+  orchestrator = new SetupOrchestrator(resolvePaths);
 
   registerBackendChannel(mainWindow, supervisor);
   registerSettingsChannel();
   registerDialogChannel(mainWindow);
   registerFsChannel(mainWindow);
+  registerSetupChannel(mainWindow, orchestrator);
 
   if (DEV_SERVER_URL) {
     await mainWindow.loadURL(DEV_SERVER_URL);
@@ -85,7 +91,10 @@ async function createWindow(): Promise<void> {
     await mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
 
-  if (settingsStore.get('autoStartBackend')) {
+  // Only auto-start the supervisor when the wizard reports completion;
+  // otherwise it would fall through to "crashed" on a fresh box and
+  // spam the StatusBar with red pills.
+  if (settingsStore.get('autoStartBackend') && setupStore.get('installedAt') != null) {
     void supervisor.start();
   }
 }

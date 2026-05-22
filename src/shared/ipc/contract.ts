@@ -1,3 +1,14 @@
+import type {
+  ModelOption,
+  ModelSelection,
+  PreflightReport,
+  SetupOverallState,
+  SetupProgressEvent,
+  SetupStepId,
+  StepReport,
+  StepStatus,
+} from '../setup/steps.js';
+
 export type BackendStatus =
   | { kind: 'idle' }
   | { kind: 'starting'; pid?: number }
@@ -28,12 +39,35 @@ export const IPC = {
   },
   dialog: {
     openImage: 'dialog:openImage',
+    openDirectory: 'dialog:openDirectory',
   },
   settings: {
     get: 'settings:get',
     set: 'settings:set',
   },
+  setup: {
+    getProgress: 'setup:getProgress',
+    start: 'setup:start',
+    cancel: 'setup:cancel',
+    setInstallRoot: 'setup:setInstallRoot',
+    listModels: 'setup:listModels',
+    setSelectedModels: 'setup:setSelectedModels',
+    preflight: 'setup:preflight',
+    progressEvent: 'setup:progress:event',
+    logEvent: 'setup:log:event',
+  },
 } as const;
+
+export type {
+  ModelOption,
+  ModelSelection,
+  PreflightReport,
+  SetupOverallState,
+  SetupProgressEvent,
+  SetupStepId,
+  StepReport,
+  StepStatus,
+};
 
 export interface SettingsShape {
   installRoot: string;
@@ -43,4 +77,5 @@ export interface SettingsShape {
   port: number | null;
   extensionEnabled: boolean;
   autoUpdate: boolean;
+  setupFirstLaunchTimeoutMs: number | null;
 }

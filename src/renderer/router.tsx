@@ -1,9 +1,10 @@
-import type { ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { createHashRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
 import { Sidebar } from './app/layout/Sidebar.js';
 import { StatusBar } from './app/layout/StatusBar.js';
 import { Placeholder } from './pages/Placeholder.js';
 import { LegacyFrame } from './pages/Legacy/LegacyFrame.js';
+import { SetupWizard } from './pages/Setup/SetupWizard.js';
 import { useBackendStatusSync } from './hooks/useBackendStatus.js';
 
 function Shell(): ReactElement {
@@ -21,7 +22,7 @@ function Shell(): ReactElement {
   );
 }
 
-const router = createHashRouter([
+const mainRouter = createHashRouter([
   {
     path: '/',
     element: <Shell />,
@@ -39,6 +40,29 @@ const router = createHashRouter([
   },
 ]);
 
+const setupRouter = createHashRouter([{ path: '*', element: <SetupWizard /> }]);
+
+function SplashScreen(): ReactElement {
+  return (
+    <div className="h-full flex items-center justify-center text-white/40 text-sm">
+      Starting Forge Neo…
+    </div>
+  );
+}
+
 export function AppRouter(): ReactElement {
-  return <RouterProvider router={router} />;
+  const [ready, setReady] = useState<{ installed: boolean } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void window.forge.setup.getProgress().then((p) => {
+      if (!cancelled) setReady({ installed: p.overall === 'done' });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!ready) return <SplashScreen />;
+  return <RouterProvider router={ready.installed ? mainRouter : setupRouter} />;
 }

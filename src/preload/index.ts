@@ -1,5 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPC, type BackendStatus, type LogLine, type SettingsShape } from '../shared/ipc/contract.js';
+import {
+  IPC,
+  type BackendStatus,
+  type LogLine,
+  type ModelOption,
+  type PreflightReport,
+  type SettingsShape,
+  type SetupProgressEvent,
+} from '../shared/ipc/contract.js';
 
 const bridge = {
   backend: {
@@ -31,10 +39,32 @@ const bridge = {
   },
   dialog: {
     openImage: (): Promise<{ path: string; dataUrl: string } | null> => ipcRenderer.invoke(IPC.dialog.openImage),
+    openDirectory: (defaultPath?: string): Promise<string | null> =>
+      ipcRenderer.invoke(IPC.dialog.openDirectory, defaultPath),
   },
   settings: {
     get: (): Promise<SettingsShape> => ipcRenderer.invoke(IPC.settings.get),
     set: (patch: Partial<SettingsShape>): Promise<SettingsShape> => ipcRenderer.invoke(IPC.settings.set, patch),
+  },
+  setup: {
+    getProgress: (): Promise<SetupProgressEvent> => ipcRenderer.invoke(IPC.setup.getProgress),
+    start: (): Promise<void> => ipcRenderer.invoke(IPC.setup.start),
+    cancel: (): Promise<void> => ipcRenderer.invoke(IPC.setup.cancel),
+    setInstallRoot: (root: string): Promise<void> => ipcRenderer.invoke(IPC.setup.setInstallRoot, root),
+    listModels: (): Promise<ModelOption[]> => ipcRenderer.invoke(IPC.setup.listModels),
+    setSelectedModels: (ids: string[]): Promise<void> =>
+      ipcRenderer.invoke(IPC.setup.setSelectedModels, ids),
+    preflight: (): Promise<PreflightReport> => ipcRenderer.invoke(IPC.setup.preflight),
+    onProgress: (cb: (event: SetupProgressEvent) => void): (() => void) => {
+      const fn = (_: unknown, event: SetupProgressEvent): void => cb(event);
+      ipcRenderer.on(IPC.setup.progressEvent, fn);
+      return () => ipcRenderer.off(IPC.setup.progressEvent, fn);
+    },
+    onLog: (cb: (line: LogLine) => void): (() => void) => {
+      const fn = (_: unknown, line: LogLine): void => cb(line);
+      ipcRenderer.on(IPC.setup.logEvent, fn);
+      return () => ipcRenderer.off(IPC.setup.logEvent, fn);
+    },
   },
 };
 

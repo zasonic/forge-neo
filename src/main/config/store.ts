@@ -11,6 +11,7 @@ const defaults: SettingsShape = {
   port: null,
   extensionEnabled: true,
   autoUpdate: false,
+  setupFirstLaunchTimeoutMs: null,
 };
 
 export const settingsStore = new Store<SettingsShape>({
@@ -22,6 +23,8 @@ export interface SetupProgress {
   lastCompletedStep: string | null;
   installedAt: number | null;
   upstreamSha: string | null;
+  upstreamShaFetchedAt: number | null;
+  selectedModelIds: string[];
 }
 
 export const setupStore = new Store<SetupProgress>({
@@ -30,5 +33,7 @@ export const setupStore = new Store<SetupProgress>({
     lastCompletedStep: null,
     installedAt: null,
     upstreamSha: null,
+    upstreamShaFetchedAt: null,
+    selectedModelIds: [],
   },
 });
