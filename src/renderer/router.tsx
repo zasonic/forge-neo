@@ -4,6 +4,7 @@ import { Sidebar } from './app/layout/Sidebar.js';
 import { StatusBar } from './app/layout/StatusBar.js';
 import { Placeholder } from './pages/Placeholder.js';
 import { LegacyFrame } from './pages/Legacy/LegacyFrame.js';
+import { Txt2ImgPage } from './pages/Txt2Img/Txt2ImgPage.js';
 import { useBackendStatusSync } from './hooks/useBackendStatus.js';
 
 function Shell(): ReactElement {
@@ -27,7 +28,7 @@ const router = createHashRouter([
     element: <Shell />,
     children: [
       { index: true, element: <Navigate to="/generate/txt2img" replace /> },
-      { path: 'generate/txt2img', element: <Placeholder title="Txt2Img" milestone="M3" /> },
+      { path: 'generate/txt2img', element: <Txt2ImgPage /> },
       { path: 'generate/img2img', element: <Placeholder title="Img2Img" milestone="M4" /> },
       { path: 'gallery', element: <Placeholder title="Gallery" milestone="M4" /> },
       { path: 'models', element: <Placeholder title="Models" milestone="M3" /> },
