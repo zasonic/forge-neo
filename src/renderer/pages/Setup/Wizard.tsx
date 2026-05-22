@@ -9,6 +9,7 @@ const STEP_PATHS: Record<string, StepName> = {
   welcome: 'welcome',
   preflight: 'preflight',
   python: 'python-runtime',
+  uv: 'uv-bin',
   venv: 'venv',
   repo: 'repo',
   torch: 'torch',
@@ -42,6 +43,7 @@ export function SetupWizard(): ReactElement {
         <Route path="welcome" element={<WelcomePage installer={installer} />} />
         <Route path="preflight" element={<RunStep installer={installer} step="preflight" title="Preflight checks" intro="Verifying NVIDIA driver and disk space." />} />
         <Route path="python" element={<RunStep installer={installer} step="python-runtime" title="Python runtime" intro="Downloading Python 3.11 standalone and verifying SHA256." />} />
+        <Route path="uv" element={<RunStep installer={installer} step="uv-bin" title="uv" intro="Downloading the uv package manager binary." />} />
         <Route path="venv" element={<RunStep installer={installer} step="venv" title="Virtualenv" intro="Creating venv with uv and installing the base pin set." />} />
         <Route path="repo" element={<RunStep installer={installer} step="repo" title="Forge source" intro="Downloading the upstream sd-webui-forge-classic source tarball." />} />
         <Route path="torch" element={<RunStep installer={installer} step="torch" title="Torch + GPU stack" intro="Installing torch / xformers / triton / sageattention / deepspeed / nunchaku / bitsandbytes. This is the long one." />} />

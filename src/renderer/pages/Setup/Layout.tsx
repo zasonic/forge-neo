@@ -12,6 +12,7 @@ const STEPS: StepDef[] = [
   { step: 'welcome', label: 'Welcome', path: '/setup/welcome' },
   { step: 'preflight', label: 'Preflight', path: '/setup/preflight' },
   { step: 'python-runtime', label: 'Python', path: '/setup/python' },
+  { step: 'uv-bin', label: 'uv', path: '/setup/uv' },
   { step: 'venv', label: 'Virtualenv', path: '/setup/venv' },
   { step: 'repo', label: 'Source', path: '/setup/repo' },
   { step: 'torch', label: 'Torch + GPU stack', path: '/setup/torch' },

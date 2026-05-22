@@ -15,13 +15,14 @@ export function venvPython(venvDir: string): string {
 }
 
 export async function createVenv(
+  uvBinPath: string,
   python: string,
   venvDir: string,
   opts: VenvOptions = {},
 ): Promise<void> {
   if (existsSync(venvDir)) return;
   await mkdir(dirname(venvDir), { recursive: true });
-  const uv = resolveUvBinary();
+  const uv = resolveUvBinary(uvBinPath);
   await spawnStream(uv, ['venv', venvDir, '--python', python], {
     signal: opts.signal,
     onStdout: opts.onLine,
@@ -30,16 +31,16 @@ export async function createVenv(
 }
 
 /**
- * Run a uv command (e.g. ['pip', 'install', 'wheel']) scoped to the given
- * venv via the VIRTUAL_ENV environment variable. uv respects that and
- * resolves the interpreter without needing an explicit --python flag.
+ * Run a uv command scoped to the given venv via VIRTUAL_ENV. uv respects
+ * that env var and resolves the interpreter without needing --python.
  */
 export async function uvRun(
+  uvBinPath: string,
   venvDir: string,
   args: readonly string[],
   opts: VenvOptions = {},
 ): Promise<void> {
-  const uv = resolveUvBinary();
+  const uv = resolveUvBinary(uvBinPath);
   await spawnStream(uv, args, {
     signal: opts.signal,
     onStdout: opts.onLine,
@@ -52,11 +53,13 @@ export async function uvRun(
 }
 
 export async function installBaseLayer(
+  uvBinPath: string,
   venvDir: string,
   opts: VenvOptions = {},
 ): Promise<void> {
-  await uvRun(venvDir, ['pip', 'install', ...BASE_PIP_PINS], opts);
+  await uvRun(uvBinPath, venvDir, ['pip', 'install', ...BASE_PIP_PINS], opts);
   await uvRun(
+    uvBinPath,
     venvDir,
     ['pip', 'install', CLIP_ZIP_URL, '--no-build-isolation'],
     opts,

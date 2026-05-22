@@ -11,6 +11,7 @@ import { settingsStore, setupStore } from '../config/store.js';
 import { resolveInstallPaths } from '../../shared/paths.js';
 import { runPreflight } from './preflight.js';
 import { ensurePython, validatePython } from './python-runtime.js';
+import { ensureUv } from './uv-bin.js';
 import { createVenv, installBaseLayer, uvRun } from './venv.js';
 import { ensureRepo } from './repo.js';
 import { syncExtension } from './extension-sync.js';
@@ -141,16 +142,21 @@ export class Installer extends EventEmitter {
       report(100, `${ver} ready at ${res.python}`);
     },
 
+    'uv-bin': async ({ signal, report }) => {
+      const paths = resolveInstallPaths(settingsStore.get('installRoot'));
+      await ensureUv(paths.uvBin, report, signal);
+    },
+
     venv: async ({ signal, report, log }) => {
       const paths = resolveInstallPaths(settingsStore.get('installRoot'));
       const byo = setupStore.get('byoPython');
       const pyRes = await ensurePython(paths.runtime, byo, () => {}, signal);
 
       report(null, `creating venv at ${paths.venv}`);
-      await createVenv(pyRes.python, paths.venv, { signal, onLine: log });
+      await createVenv(paths.uvBin, pyRes.python, paths.venv, { signal, onLine: log });
 
       report(null, 'installing wheel / setuptools / pip pins');
-      await installBaseLayer(paths.venv, { signal, onLine: log });
+      await installBaseLayer(paths.uvBin, paths.venv, { signal, onLine: log });
       report(100, 'base layer installed');
     },
 
@@ -173,7 +179,7 @@ export class Installer extends EventEmitter {
           continue;
         }
         report(Math.round(((done - 1) / total) * 100), `installing ${spec.label}`);
-        await uvRun(paths.venv, spec.args, { signal, onLine: log });
+        await uvRun(paths.uvBin, paths.venv, spec.args, { signal, onLine: log });
         completed.add(spec.id);
         setupStore.set('completedTorchSpecs', [...completed]);
       }

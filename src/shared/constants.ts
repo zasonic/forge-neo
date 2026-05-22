@@ -24,11 +24,13 @@ export const PYTHON_SHA256_URL = `${PYTHON_DOWNLOAD_URL}.sha256`;
 export const PYTHON_MIRRORS: string[] = [];
 
 export const UV_VERSION = '0.5.11';
+export const UV_DOWNLOAD_URL = `https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-pc-windows-msvc.zip`;
 
 export const STEP_NAMES = [
   'welcome',
   'preflight',
   'python-runtime',
+  'uv-bin',
   'venv',
   'repo',
   'torch',
