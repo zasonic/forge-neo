@@ -1,0 +1,8 @@
+[
+  { "name": "automatic", "label": "Automatic" },
+  { "name": "uniform", "label": "Uniform" },
+  { "name": "karras", "label": "Karras" },
+  { "name": "exponential", "label": "Exponential" },
+  { "name": "polyexponential", "label": "Polyexponential" },
+  { "name": "sgm_uniform", "label": "SGM Uniform" }
+]

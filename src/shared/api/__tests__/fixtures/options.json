@@ -1,0 +1,13 @@
+{
+  "sd_model_checkpoint": "v1-5-pruned-emaonly.safetensors [6ce0161689]",
+  "sd_vae": "Automatic",
+  "samples_save": true,
+  "samples_format": "png",
+  "samples_filename_pattern": "",
+  "save_images_add_number": true,
+  "grid_save": true,
+  "grid_format": "png",
+  "outdir_samples": "",
+  "outdir_txt2img_samples": "outputs/txt2img-images",
+  "outdir_img2img_samples": "outputs/img2img-images"
+}

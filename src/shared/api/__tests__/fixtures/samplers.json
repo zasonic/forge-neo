@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Euler a",
+    "aliases": ["k_euler_a", "k_euler_ancestral"],
+    "options": { "scheduler": "Automatic" }
+  },
+  {
+    "name": "Euler",
+    "aliases": ["k_euler"],
+    "options": {}
+  },
+  {
+    "name": "DPM++ 2M",
+    "aliases": ["k_dpmpp_2m"],
+    "options": { "scheduler": "Karras", "uses_ensd": "True" }
+  },
+  {
+    "name": "DPM++ SDE",
+    "aliases": ["k_dpmpp_sde"],
+    "options": { "scheduler": "Karras" }
+  },
+  {
+    "name": "LMS",
+    "aliases": ["k_lms"],
+    "options": {}
+  }
+]

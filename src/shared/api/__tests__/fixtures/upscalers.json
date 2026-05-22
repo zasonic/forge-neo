@@ -1,0 +1,17 @@
+[
+  { "name": "None", "model_name": null, "model_path": null, "scale": 4 },
+  { "name": "Lanczos", "model_name": null, "model_path": null, "scale": 4 },
+  { "name": "Nearest", "model_name": null, "model_path": null, "scale": 4 },
+  {
+    "name": "R-ESRGAN 4x+",
+    "model_name": "RealESRGAN_x4plus",
+    "model_path": "C:\\forge-neo\\app\\models\\ESRGAN\\RealESRGAN_x4plus.pth",
+    "scale": 4
+  },
+  {
+    "name": "ESRGAN_4x",
+    "model_name": "ESRGAN_4x",
+    "model_path": "C:\\forge-neo\\app\\models\\ESRGAN\\ESRGAN_4x.pth",
+    "scale": 4
+  }
+]
