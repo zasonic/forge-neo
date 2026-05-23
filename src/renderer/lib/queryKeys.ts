@@ -5,5 +5,4 @@ export const queryKeys = {
   schedulers: ['schedulers'] as const,
   progress: ['progress'] as const,
   apiAuth: ['settings', 'apiAuth'] as const,
-  loras: ['loras'] as const,
 };
