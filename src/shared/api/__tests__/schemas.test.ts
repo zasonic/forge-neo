@@ -6,8 +6,10 @@ import { z } from 'zod';
 import {
   Embedding,
   GenerationResponse,
+  Img2ImgPayload,
   Lora,
   OptionsResponse,
+  PngInfoResult,
   ProgressResponse,
   Sampler,
   Scheduler,
@@ -108,6 +110,55 @@ describe('Txt2ImgPayload defaults flow through', () => {
     expect(() => Txt2ImgPayload.parse({ prompt: 'x', steps: 0 })).toThrow();
     expect(() => Txt2ImgPayload.parse({ prompt: 'x', steps: 151 })).toThrow();
     expect(Txt2ImgPayload.parse({ prompt: 'x', steps: 150 }).steps).toBe(150);
+  });
+});
+
+describe('Img2ImgPayload defaults flow through', () => {
+  it('fills denoising_strength and keeps init_images required', () => {
+    const parsed = Img2ImgPayload.parse({ prompt: 'hi', init_images: ['xxxxBase64xxxx'] });
+    expect(parsed.denoising_strength).toBe(0.75);
+    expect(parsed.init_images).toEqual(['xxxxBase64xxxx']);
+    expect(parsed.cfg_scale).toBe(7);
+    expect(parsed.width).toBe(512);
+  });
+
+  it('does not carry the hires-fix fields from Txt2ImgPayload', () => {
+    const parsed = Img2ImgPayload.parse({ prompt: 'hi', init_images: [] });
+    expect('enable_hr' in parsed).toBe(false);
+    expect('hr_scale' in parsed).toBe(false);
+    expect('hr_upscaler' in parsed).toBe(false);
+  });
+
+  it('clamps denoising_strength to [0,1]', () => {
+    expect(() =>
+      Img2ImgPayload.parse({ prompt: 'x', init_images: [], denoising_strength: 1.1 }),
+    ).toThrow();
+    expect(() =>
+      Img2ImgPayload.parse({ prompt: 'x', init_images: [], denoising_strength: -0.1 }),
+    ).toThrow();
+  });
+});
+
+describe('PngInfoResult round-trips', () => {
+  it('parses and re-emits the documented shape', () => {
+    const value = {
+      prompt: 'a cat',
+      negativePrompt: 'lowres',
+      parameters: { Steps: '20', Sampler: 'Euler a', Seed: '42' },
+      raw: 'a cat\nNegative prompt: lowres\nSteps: 20, Sampler: Euler a, Seed: 42',
+    };
+    expect(PngInfoResult.parse(value)).toEqual(value);
+  });
+
+  it('rejects non-string parameter values', () => {
+    expect(() =>
+      PngInfoResult.parse({
+        prompt: '',
+        negativePrompt: '',
+        parameters: { Steps: 20 },
+        raw: '',
+      }),
+    ).toThrow();
   });
 });
 

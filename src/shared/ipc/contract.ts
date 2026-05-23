@@ -46,6 +46,8 @@ export const IPC = {
     scanModels: 'fs:scanModels',
     watchOutputs: 'fs:watchOutputs',
     outputsEvent: 'fs:outputs:event',
+    readPngInfo: 'fs:readPngInfo',
+    showItemInFolder: 'fs:showItemInFolder',
   },
   dialog: {
     openImage: 'dialog:openImage',

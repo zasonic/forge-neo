@@ -1,4 +1,4 @@
-import { ipcMain, type BrowserWindow } from 'electron';
+import { ipcMain, shell, type BrowserWindow } from 'electron';
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
@@ -6,6 +6,7 @@ import chokidar, { type FSWatcher } from 'chokidar';
 import { IPC } from '../../shared/ipc/contract.js';
 import { settingsStore } from '../config/store.js';
 import { resolveInstallPaths } from '../../shared/paths.js';
+import { readPngInfo } from '../lib/pngInfo.js';
 
 const WATCH_DEPTH = 3;
 const DEBOUNCE_MS = 250;
@@ -74,6 +75,12 @@ export function registerFsChannel(win: BrowserWindow): void {
     });
     activeWatcher.on('add', fire).on('unlink', fire);
     return true;
+  });
+
+  ipcMain.handle(IPC.fs.readPngInfo, async (_e, path: string) => readPngInfo(path));
+
+  ipcMain.handle(IPC.fs.showItemInFolder, (_e, path: string) => {
+    shell.showItemInFolder(path);
   });
 
   win.on('closed', () => {
