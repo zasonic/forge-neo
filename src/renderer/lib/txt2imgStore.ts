@@ -12,6 +12,7 @@ interface Txt2ImgStore {
   setShowPreview: (b: boolean) => void;
   randomSeed: () => void;
   recycleSeed: () => void;
+  appendToPrompt: (text: string) => void;
 }
 
 const initialForm: FormState = Txt2ImgPayload.parse({ prompt: '' });
@@ -38,4 +39,11 @@ export const useTxt2ImgStore = create<Txt2ImgStore>((set, get) => ({
       // info wasn't JSON; nothing to recycle
     }
   },
+  appendToPrompt: (text) =>
+    set((s) => ({
+      form: {
+        ...s.form,
+        prompt: s.form.prompt.length > 0 ? `${s.form.prompt} ${text}` : text,
+      },
+    })),
 }));

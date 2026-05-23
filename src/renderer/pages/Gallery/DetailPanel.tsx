@@ -3,8 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import type { OutputEntry } from '@shared/ipc/contract.js';
 import { parseGenParams } from '../../lib/parseGenParams.js';
 import { useTxt2ImgStore } from '../../lib/txt2imgStore.js';
+import { useImg2ImgStore } from '../../lib/img2imgStore.js';
 import { pathToForgeImg } from './pathToForgeImg.js';
 import { useImageMetadata } from './useImageMetadata.js';
+
+async function fetchAsBase64(url: string): Promise<string> {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result);
+      const idx = result.indexOf('base64,');
+      resolve(idx === -1 ? result : result.slice(idx + 'base64,'.length));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error('FileReader error'));
+    reader.readAsDataURL(blob);
+  });
+}
 
 interface Props {
   entry: OutputEntry | null;
@@ -79,6 +95,17 @@ export function DetailPanel({ entry }: Props): ReactElement {
     if (!ok) flashToast('Could not open folder.');
   };
 
+  const sendToImg2Img = async (): Promise<void> => {
+    try {
+      const base64 = await fetchAsBase64(pathToForgeImg(entry.relPath));
+      useImg2ImgStore.getState().setInitImage(entry.path, base64);
+      if (parsed) useImg2ImgStore.getState().loadFromTxt2ImgFields(parsed.fields);
+      navigate('/generate/img2img');
+    } catch {
+      flashToast('Could not load image.');
+    }
+  };
+
   const copyParameters = async (): Promise<void> => {
     if (metadata.kind !== 'ready' || !metadata.rawText) return;
     await navigator.clipboard.writeText(metadata.rawText);
@@ -116,6 +143,13 @@ export function DetailPanel({ entry }: Props): ReactElement {
           className="px-3 py-1.5 rounded bg-accent text-accent-fg disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Send to txt2img
+        </button>
+        <button
+          type="button"
+          onClick={() => void sendToImg2Img()}
+          className="px-3 py-1.5 rounded bg-accent text-accent-fg"
+        >
+          Send to img2img
         </button>
         <button
           type="button"
