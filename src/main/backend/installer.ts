@@ -16,6 +16,7 @@ import { createVenv, installBaseLayer, uvRun } from './venv.js';
 import { ensureRepo } from './repo.js';
 import { syncExtension } from './extension-sync.js';
 import { runSmokeTest } from './smoke-test.js';
+import type { Supervisor } from './supervisor.js';
 
 interface StepContext {
   signal: AbortSignal;
@@ -29,6 +30,10 @@ export class Installer extends EventEmitter {
   private running = false;
   private abortController: AbortController | null = null;
   private currentStep: StepName | null = null;
+
+  constructor(private supervisor: Supervisor) {
+    super();
+  }
 
   getState(): InstallerState {
     return {
@@ -194,8 +199,7 @@ export class Installer extends EventEmitter {
     },
 
     'smoke-test': async ({ signal, report }) => {
-      const root = settingsStore.get('installRoot');
-      await runSmokeTest(root, report, signal);
+      await runSmokeTest(this.supervisor, report, signal);
       setupStore.set('upstreamSha', UPSTREAM_SHA);
       report(100, 'smoke test passed');
     },

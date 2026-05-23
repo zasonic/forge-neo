@@ -1,5 +1,5 @@
-import { Supervisor } from './supervisor.js';
-import { resolveInstallPaths } from '../../shared/paths.js';
+import type { Supervisor } from './supervisor.js';
+import type { BackendStatus, LogLine } from '../../shared/ipc/contract.js';
 import { STARTUP_TIMEOUT_MS } from '../../shared/constants.js';
 
 interface ProgressReporter {
@@ -7,24 +7,35 @@ interface ProgressReporter {
 }
 
 export async function runSmokeTest(
-  installRoot: string,
+  supervisor: Supervisor,
   report: ProgressReporter,
   signal?: AbortSignal,
 ): Promise<void> {
-  const paths = resolveInstallPaths(installRoot);
-  const supervisor = new Supervisor(paths);
-  supervisor.on('log', (line) => {
+  const onLog = (line: LogLine): void => {
     if (line.stream !== 'app') return;
     report(null, line.text.trim().slice(0, 200));
-  });
+  };
+
+  let timeoutHandle: NodeJS.Timeout | null = null;
+  let onStatus: ((s: BackendStatus) => void) | null = null;
+  let onAbort: (() => void) | null = null;
+
+  supervisor.on('log', onLog);
 
   const ready = new Promise<void>((resolve, reject) => {
-    supervisor.on('status', (s) => {
+    onStatus = (s) => {
       if (s.kind === 'ready') resolve();
       if (s.kind === 'crashed') reject(new Error(`backend crashed (code ${s.code})`));
-    });
-    setTimeout(() => reject(new Error('smoke-test timed out')), STARTUP_TIMEOUT_MS + 30_000);
-    signal?.addEventListener('abort', () => reject(new Error('aborted')), { once: true });
+    };
+    supervisor.on('status', onStatus);
+    timeoutHandle = setTimeout(
+      () => reject(new Error('smoke-test timed out')),
+      STARTUP_TIMEOUT_MS + 30_000,
+    );
+    if (signal) {
+      onAbort = (): void => reject(new Error('aborted'));
+      signal.addEventListener('abort', onAbort, { once: true });
+    }
   });
 
   try {
@@ -33,6 +44,10 @@ export async function runSmokeTest(
     await ready;
     report(null, 'backend reached ready; shutting down');
   } finally {
+    if (timeoutHandle) clearTimeout(timeoutHandle);
+    if (onStatus) supervisor.off('status', onStatus);
+    supervisor.off('log', onLog);
+    if (signal && onAbort) signal.removeEventListener('abort', onAbort);
     await supervisor.stop().catch(() => {});
   }
 }

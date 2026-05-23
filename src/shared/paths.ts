@@ -3,7 +3,6 @@ import { join } from 'node:path';
 export interface InstallPaths {
   root: string;
   runtime: string;
-  python: string;
   uvBin: string;
   app: string;
   venv: string;
@@ -22,11 +21,9 @@ export function resolveInstallPaths(root: string): InstallPaths {
   const app = join(root, 'app');
   const venv = join(app, 'venv');
   const runtime = join(root, 'runtime');
-  const python = join(runtime, 'python311');
   return {
     root,
     runtime,
-    python,
     uvBin: join(runtime, 'bin', 'uv.exe'),
     app,
     venv,

@@ -8,8 +8,6 @@ files:
   - node_modules/**/*
   - package.json
 extraResources:
-  - from: resources/bin
-    to: bin
   - from: resources/extension
     to: extension
   - from: resources/model-manifests
