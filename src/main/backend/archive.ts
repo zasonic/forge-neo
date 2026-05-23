@@ -1,4 +1,6 @@
+import { createReadStream } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
+import { pipeline } from 'node:stream/promises';
 import { x as extractTar } from 'tar';
 
 export interface ExtractOptions {
@@ -12,9 +14,9 @@ export async function extractTarGz(
   options: ExtractOptions = {},
 ): Promise<void> {
   await mkdir(dest, { recursive: true });
-  await extractTar({
-    file: archive,
-    cwd: dest,
-    strip: options.strip ?? 0,
-  });
+  await pipeline(
+    createReadStream(archive),
+    extractTar({ cwd: dest, strip: options.strip ?? 0 }),
+    { signal: options.signal },
+  );
 }

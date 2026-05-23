@@ -8,7 +8,6 @@ import {
   BACKEND_PORT_RANGE,
   READINESS_PROBE_PATH,
   STARTUP_TIMEOUT_MS,
-  STDOUT_READY_PATTERN,
 } from '../../shared/constants.js';
 import type { BackendStatus, LogLine } from '../../shared/ipc/contract.js';
 import type { InstallPaths } from '../../shared/paths.js';
@@ -23,6 +22,7 @@ export class Supervisor extends EventEmitter {
   private status: BackendStatus = { kind: 'idle' };
   private stopping = false;
   private startupTimer: NodeJS.Timeout | null = null;
+  private probeTimer: NodeJS.Timeout | null = null;
 
   constructor(private paths: InstallPaths) {
     super();
@@ -91,21 +91,7 @@ export class Supervisor extends EventEmitter {
     this.child.stdout?.setEncoding('utf-8');
     this.child.stderr?.setEncoding('utf-8');
 
-    let buffered = '';
-    let probed = false;
-    const tryReady = async (): Promise<void> => {
-      if (probed) return;
-      if (!STDOUT_READY_PATTERN.test(buffered)) return;
-      probed = true;
-      const baseUrl = `http://${BACKEND_HOST}:${port}`;
-      const ok = await this.probeReady(baseUrl);
-      if (ok) {
-        this.clearStartupTimer();
-        this.setStatus({ kind: 'ready', pid, port, baseUrl });
-      } else {
-        probed = false;
-      }
-    };
+    const baseUrl = `http://${BACKEND_HOST}:${port}`;
 
     this.startupTimer = setTimeout(() => {
       if (this.status.kind === 'starting') {
@@ -114,11 +100,22 @@ export class Supervisor extends EventEmitter {
       }
     }, STARTUP_TIMEOUT_MS);
 
+    this.probeTimer = setInterval(() => {
+      if (this.status.kind !== 'starting') {
+        this.clearProbeTimer();
+        return;
+      }
+      void this.probeReady(baseUrl).then((ok) => {
+        if (!ok) return;
+        if (this.status.kind !== 'starting') return;
+        this.clearProbeTimer();
+        this.clearStartupTimer();
+        this.setStatus({ kind: 'ready', pid, port, baseUrl });
+      });
+    }, 1000);
+
     this.child.stdout?.on('data', (chunk: string) => {
-      buffered += chunk;
-      if (buffered.length > 64_000) buffered = buffered.slice(-32_000);
       this.log('stdout', chunk);
-      void tryReady();
     });
 
     this.child.stderr?.on('data', (chunk: string) => {
@@ -127,6 +124,7 @@ export class Supervisor extends EventEmitter {
 
     this.child.on('exit', (code, signal) => {
       this.clearStartupTimer();
+      this.clearProbeTimer();
       this.log('app', `backend exited code=${code} signal=${signal ?? 'null'}`);
       this.child = null;
       if (this.stopping) {
@@ -141,6 +139,13 @@ export class Supervisor extends EventEmitter {
     if (this.startupTimer) {
       clearTimeout(this.startupTimer);
       this.startupTimer = null;
+    }
+  }
+
+  private clearProbeTimer(): void {
+    if (this.probeTimer) {
+      clearInterval(this.probeTimer);
+      this.probeTimer = null;
     }
   }
 
@@ -159,6 +164,7 @@ export class Supervisor extends EventEmitter {
     this.child = null;
     this.stopping = true;
     this.clearStartupTimer();
+    this.clearProbeTimer();
     this.setStatus({ kind: 'stopping' });
 
     const pid = child.pid;

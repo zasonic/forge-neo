@@ -74,7 +74,7 @@ async function createWindow(): Promise<void> {
 
   const paths = resolveInstallPaths(settingsStore.get('installRoot'));
   supervisor = new Supervisor(paths);
-  const installer = new Installer();
+  const installer = new Installer(supervisor);
 
   registerBackendChannel(mainWindow, supervisor);
   registerSettingsChannel();

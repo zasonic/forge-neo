@@ -8,7 +8,6 @@ export const UPSTREAM_SHA = '61d327da65b0483cafb74d641f030737db2d6bf1';
 export const UPSTREAM_TARBALL_URL = `${UPSTREAM_REPO}/archive/${UPSTREAM_SHA}.tar.gz`;
 
 export const READINESS_PROBE_PATH = '/sdapi/v1/cmd-flags';
-export const STDOUT_READY_PATTERN = /Running on local URL/;
 export const STARTUP_TIMEOUT_MS = 5 * 60_000;
 
 export const MIN_FREE_GB = 20;
