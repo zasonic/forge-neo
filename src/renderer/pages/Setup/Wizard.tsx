@@ -61,6 +61,7 @@ export function SetupWizard(): ReactElement {
 
 function WelcomePage({ installer }: { installer: ReturnType<typeof useInstaller> }): ReactElement {
   const [root, setRoot] = useState<string | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -78,6 +79,19 @@ function WelcomePage({ installer }: { installer: ReturnType<typeof useInstaller>
     await installer.start();
     navigate('/setup/preflight');
   };
+
+  const resume = async (): Promise<void> => {
+    await installer.start(installer.state?.lastCompletedStep ?? undefined);
+  };
+
+  const reset = async (): Promise<void> => {
+    await installer.reset();
+    setConfirmReset(false);
+  };
+
+  const hasPriorProgress =
+    installer.state?.lastCompletedStep != null &&
+    installer.state.installedAt == null;
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -110,13 +124,49 @@ function WelcomePage({ installer }: { installer: ReturnType<typeof useInstaller>
           live alongside the runtime.
         </div>
       </section>
+
+      {hasPriorProgress && (
+        <section className="rounded border border-amber-500/30 bg-amber-500/10 p-3 space-y-2 text-sm">
+          <div className="text-amber-200">
+            A previous install reached{' '}
+            <code>{installer.state?.lastCompletedStep}</code> but did not
+            finish.
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => void resume()}
+              className="px-3 py-1.5 rounded bg-accent text-accent-fg"
+            >
+              Resume install
+            </button>
+            <button
+              onClick={() => setConfirmReset((v) => !v)}
+              className="px-3 py-1.5 rounded bg-white/10 hover:bg-white/20"
+            >
+              {confirmReset ? 'Cancel' : 'Reset install state'}
+            </button>
+            {confirmReset && (
+              <button
+                onClick={() => void reset()}
+                className="px-3 py-1.5 rounded bg-red-500/20 hover:bg-red-500/30 text-red-100"
+              >
+                Confirm reset
+              </button>
+            )}
+          </div>
+          <div className="text-xs text-white/40">
+            Reset only clears progress markers — files on disk are kept.
+          </div>
+        </section>
+      )}
+
       <section className="flex justify-end">
         <button
           onClick={() => void begin()}
           disabled={!root}
           className="px-4 py-2 rounded bg-accent text-accent-fg disabled:opacity-50"
         >
-          Begin install
+          {hasPriorProgress ? 'Start over' : 'Begin install'}
         </button>
       </section>
     </div>
@@ -200,10 +250,10 @@ function DonePage({ installer }: { installer: ReturnType<typeof useInstaller> })
         </p>
       </header>
       <button
-        onClick={() => navigate('/legacy/txt2img', { replace: true })}
+        onClick={() => navigate('/generate/txt2img', { replace: true })}
         className="px-4 py-2 rounded bg-accent text-accent-fg"
       >
-        Open Legacy UI
+        Open Forge Neo
       </button>
       <div className="text-xs text-white/40">
         Need to start over? Reset is available under Settings.

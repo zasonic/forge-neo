@@ -1,0 +1,46 @@
+[
+  {
+    "key": "sd_model_checkpoint",
+    "label": "Stable Diffusion checkpoint",
+    "default": null,
+    "section": ["sd", "Stable Diffusion"],
+    "component": "Dropdown",
+    "component_args": { "choices": [] },
+    "category_id": "sd",
+    "refresh": true,
+    "comment": ""
+  },
+  {
+    "key": "samples_save",
+    "label": "Always save all generated images",
+    "default": true,
+    "section": ["saving-images", "Saving images/grids"],
+    "component": "Checkbox",
+    "component_args": {},
+    "category_id": "saving",
+    "refresh": false,
+    "comment": ""
+  },
+  {
+    "key": "outdir_samples",
+    "label": "Output directory for images",
+    "default": "",
+    "section": ["saving-paths", "Paths for saving"],
+    "component": "Textbox",
+    "component_args": {},
+    "category_id": "saving",
+    "refresh": false,
+    "comment": ""
+  },
+  {
+    "key": "CLIP_stop_at_last_layers",
+    "label": "Clip skip",
+    "default": 1,
+    "section": ["sd", "Stable Diffusion"],
+    "component": "Slider",
+    "component_args": { "minimum": 1, "maximum": 12, "step": 1 },
+    "category_id": "sd",
+    "refresh": false,
+    "comment": "Early stop CLIP processing"
+  }
+]

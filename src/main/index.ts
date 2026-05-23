@@ -33,10 +33,6 @@ function buildCsp(): string {
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob: ${FORGE_IMG_SCHEME}:`,
     `connect-src ${connect.join(' ')}`,
-    // frame-src does not constrain Electron <webview> (separate WebContents).
-    // The webview security boundary is the will-navigate guard in
-    // src/renderer/pages/Legacy/LegacyFrame.tsx plus its sandbox attrs.
-    `frame-src http://127.0.0.1:*`,
     `worker-src 'self' blob:`,
   ].join('; ');
 }
@@ -65,7 +61,7 @@ async function createWindow(): Promise<void> {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
-      webviewTag: true,
+      webviewTag: false,
     },
   });
 

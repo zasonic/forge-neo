@@ -7,20 +7,21 @@ interface Item {
   hint?: string;
 }
 
-const primary: Item[] = [
-  { to: '/generate/txt2img', label: 'Generate' },
-  { to: '/gallery', label: 'Gallery' },
-  { to: '/models', label: 'Models' },
-  { to: '/loras', label: 'LoRAs' },
-  { to: '/settings', label: 'Settings' },
+const generate: Item[] = [
+  { to: '/generate/txt2img', label: 'txt2img' },
+  { to: '/extras', label: 'Extras' },
+  { to: '/png-info', label: 'PNG Info' },
 ];
 
-const legacy: Item[] = [
-  { to: '/legacy/extras', label: 'Extras' },
-  { to: '/legacy/pnginfo', label: 'PNG Info' },
-  { to: '/legacy/modelmerger', label: 'Model Merger' },
-  { to: '/legacy/extensions', label: 'Extensions' },
-  { to: '/legacy/settings', label: 'Backend Settings' },
+const library: Item[] = [
+  { to: '/gallery', label: 'Gallery' },
+  { to: '/models', label: 'Models' },
+];
+
+const advanced: Item[] = [
+  { to: '/model-merger', label: 'Model Merger' },
+  { to: '/extensions', label: 'Extensions' },
+  { to: '/settings', label: 'Settings' },
 ];
 
 function linkClass({ isActive }: { isActive: boolean }): string {
@@ -30,6 +31,21 @@ function linkClass({ isActive }: { isActive: boolean }): string {
   ].join(' ');
 }
 
+function Group({ title, items }: { title: string; items: Item[] }): ReactElement {
+  return (
+    <>
+      <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-wider text-white/40">
+        {title}
+      </div>
+      {items.map((i) => (
+        <NavLink key={i.to} to={i.to} className={linkClass}>
+          {i.label}
+        </NavLink>
+      ))}
+    </>
+  );
+}
+
 export function Sidebar(): ReactElement {
   return (
     <aside className="w-56 shrink-0 border-r border-border bg-bg-subtle flex flex-col">
@@ -37,20 +53,10 @@ export function Sidebar(): ReactElement {
         <div className="text-lg font-semibold">Forge Neo</div>
         <div className="text-xs text-white/40">v0.1.0</div>
       </div>
-      <nav className="flex-1 px-2 space-y-1">
-        {primary.map((i) => (
-          <NavLink key={i.to} to={i.to} className={linkClass}>
-            {i.label}
-          </NavLink>
-        ))}
-        <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-wider text-white/40">
-          Legacy UI
-        </div>
-        {legacy.map((i) => (
-          <NavLink key={i.to} to={i.to} className={linkClass}>
-            {i.label}
-          </NavLink>
-        ))}
+      <nav className="flex-1 px-2 space-y-1 overflow-y-auto pb-3">
+        <Group title="Generate" items={generate} />
+        <Group title="Library" items={library} />
+        <Group title="Advanced" items={advanced} />
       </nav>
     </aside>
   );

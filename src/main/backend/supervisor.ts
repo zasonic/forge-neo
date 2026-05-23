@@ -9,7 +9,6 @@ import {
   READINESS_PROBE_PATH,
   STARTUP_TIMEOUT_MS,
   STDOUT_READY_PATTERN,
-  SUBPATH,
 } from '../../shared/constants.js';
 import type { BackendStatus, LogLine } from '../../shared/ipc/contract.js';
 import type { InstallPaths } from '../../shared/paths.js';
@@ -68,8 +67,6 @@ export class Supervisor extends EventEmitter {
       '--api',
       '--port',
       String(port),
-      '--subpath',
-      SUBPATH,
       '--skip-version-check',
       '--cuda-malloc',
     ];

@@ -3,31 +3,47 @@
 Native Electron frontend for
 [sd-webui-forge-classic (neo branch)](https://github.com/Haoming02/sd-webui-forge-classic/tree/neo).
 
-A hybrid UI: native React pages for the most-used flows (txt2img,
-img2img, gallery, model + LoRA pickers) that talk to Forge's
-`/sdapi/v1/*` HTTP API directly, plus a Legacy UI page that hosts the
-existing Gradio in a sandboxed `<webview>` for the long tail
-(extras, pnginfo, modelmerger, extensions, backend settings).
+A single Windows app that owns install, launch, and the entire UI. The
+shipped product has no Gradio webview — every page is React talking to
+Forge's `/sdapi/v1/*` HTTP API (and a few `/forge-neo/*` routes from the
+bundled extension) directly.
 
-The Python backend is unchanged. We replace the Pinokio launcher +
-in-browser Gradio with a single Windows app.
+The Python backend itself is unchanged.
 
 ## Status
 
-Day-one platform: Windows. Active branch:
-`claude/electron-frontend-migration-xdUk5`. M1 (shell + supervisor +
-Legacy webview), M1.1 (audit patches + pinned upstream SHA), M2 (setup
-wizard) and M2.1 (PR readiness — install-time uv, generated icons,
-GitHub Actions) are landed. M3–M6 (native txt2img, LoRAs + Gallery,
-polish, installer signing + auto-update) still to come.
+Day-one platform: Windows.
+
+- **M1** Electron shell + backend supervisor (no Pinokio launcher)
+- **M2** First-run setup wizard (uv-managed Python 3.11, pinned upstream
+  source, torch + GPU stack, vendored extension)
+- **M3** Native txt2img + Models pages
+- **M4** Native Gallery page with PNG metadata extraction
+- **M5** Native Extras, PNG Info, Model Merger, Extensions, Settings;
+  Legacy webview retired
+
+Img2Img + LoRAs and the M6 distribution track (code signing +
+auto-update + GitHub Releases) are still to come.
+
+## Sidebar
+
+- **Generate**: txt2img, Extras (upscale + face restore), PNG Info
+- **Library**: Gallery, Models
+- **Advanced**: Model Merger, Extensions, Settings (App / Backend)
+
+Each page calls the Forge HTTP API directly. The Model Merger,
+Extensions toggle, options-schema discovery, and LoRAs refresh routes
+live in the bundled `forge-neo-api` Python extension under
+`/forge-neo/*` to keep them clearly distinct from upstream `/sdapi/v1/*`.
 
 ## Verifying a PR (no Windows machine required)
 
 Every push to `main` or any `claude/**` branch — and every pull request
 — triggers two CI workflows:
 
-1. **`ci` (Ubuntu)** — typecheck, build, headless Electron boot under
-   xvfb. Catches JS errors, missing imports, broken IPC wiring.
+1. **`ci` (Ubuntu)** — typecheck, lint, vitest, build, headless
+   Electron boot under xvfb. Catches JS errors, missing imports,
+   broken IPC wiring.
 2. **`build-windows` (Windows)** — runs `npm run build:win` on a
    Windows runner and uploads the NSIS installer as a downloadable
    artifact named `forge-neo-windows-<sha>`.
@@ -42,7 +58,14 @@ To verify a PR end-to-end:
    the `uv` binary, the sd-webui-forge-classic source (pinned SHA),
    torch / xformers / triton / sageattention / deepspeed / nunchaku /
    bitsandbytes, and the vendored extension. Total ~10–15 minutes on
-   a fast network. Lands on Legacy UI with the backend ready.
+   a fast network.
+4. The app lands on txt2img with the backend warming up. Confirm:
+   - Generate a small SD1.5 image from txt2img.
+   - Open Gallery → click a result → "Send to txt2img" → generate.
+   - Open Extras → drop an image → upscale 2x with R-ESRGAN.
+   - Open PNG Info → drop a generated PNG → see prompt + params.
+   - Open Settings → Backend tab → tweak Clip skip → Apply.
+   - Open Extensions → toggle one off → restart backend on prompt.
 
 ## Dev
 
@@ -53,7 +76,7 @@ npm run dev
 
 Starts Vite, `tsc --watch` for the main process, and Electron pointed
 at the Vite dev server. The window opens on `/setup/welcome` when no
-install exists, or on `/legacy/txt2img` once installed.
+install exists, or on `/generate/txt2img` once installed.
 
 ## Build
 
@@ -71,12 +94,15 @@ source is newer.
   state machine, IPC, custom protocols.
 - `src/preload` — contextBridge surface exposed to the renderer.
 - `src/renderer` — React + Vite + Tailwind UI. `pages/Setup/*` hosts
-  the first-run wizard; `pages/Legacy/LegacyFrame.tsx` is the
-  sandboxed `<webview>` over the Gradio UI under `--subpath legacy`.
+  the first-run wizard; the rest are native pages that call
+  `/sdapi/v1/*` (and a few `/forge-neo/*`) over fetch with zod
+  validation.
 - `src/shared` — zod schemas, IPC contract, path helpers, pinned
   constants (UPSTREAM_SHA, PYTHON_*, UV_*, TORCH_INSTALL_SPECS).
 - `resources/extension/forge-neo-api` — vendored Python extension
-  that adds `/sdapi/v1/loras` and friends.
+  that adds `/sdapi/v1/loras`, `/sdapi/v1/embeddings-detailed`, and
+  the `/forge-neo/*` namespace (options-schema, modelmerger, extension
+  toggle, refresh-loras).
 - `resources/model-manifests` — archived `download-*.json` manifests
   from the previous Pinokio setup, reused by the optional starter-model
   step.

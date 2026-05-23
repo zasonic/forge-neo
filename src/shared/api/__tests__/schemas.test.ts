@@ -5,8 +5,14 @@ import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import {
   Embedding,
+  Extension,
+  ExtrasSinglePayload,
+  ExtrasSingleResponse,
   GenerationResponse,
   Lora,
+  ModelMergerPayload,
+  ModelMergerResponse,
+  OptionMetadata,
   OptionsResponse,
   ProgressResponse,
   Sampler,
@@ -127,5 +133,56 @@ describe('Embedding schema tolerates upstream variability', () => {
       vectors: 4,
     });
     expect(parsed.vectors).toBe(4);
+  });
+});
+
+describe('Extension list schema', () => {
+  it('parses the /sdapi/v1/extensions fixture', () => {
+    const parsed = z.array(Extension).parse(fixture('extensions.json'));
+    expect(parsed).toHaveLength(3);
+    expect(parsed[0]?.name).toBe('forge-neo-api');
+    expect(parsed[0]?.enabled).toBe(true);
+    expect(parsed[1]?.remote).toContain('controlnet');
+    expect(parsed[2]?.enabled).toBe(false);
+  });
+});
+
+describe('OptionMetadata schema for /forge-neo/options-schema', () => {
+  it('parses the bundled fixture', () => {
+    const parsed = z.array(OptionMetadata).parse(fixture('options-schema.json'));
+    expect(parsed).toHaveLength(4);
+    const clipSkip = parsed.find((o) => o.key === 'CLIP_stop_at_last_layers');
+    expect(clipSkip?.component).toBe('Slider');
+    expect(clipSkip?.component_args.maximum).toBe(12);
+  });
+});
+
+describe('Extras and Model Merger payload/response schemas', () => {
+  it('fills extras defaults for a minimal payload', () => {
+    const parsed = ExtrasSinglePayload.parse({ image: 'xxxx' });
+    expect(parsed.upscaler_1).toBe('None');
+    expect(parsed.upscaling_resize).toBe(2);
+    expect(parsed.upscale_first).toBe(false);
+  });
+
+  it('parses the extras single response fixture', () => {
+    const parsed = ExtrasSingleResponse.parse(fixture('extras-single-response.json'));
+    expect(parsed.image).toContain('iVBORw0KGgo');
+    expect(parsed.html_info).toContain('Postprocess');
+  });
+
+  it('rejects out-of-range multipliers', () => {
+    expect(() =>
+      ModelMergerPayload.parse({
+        primary_model_name: 'a',
+        secondary_model_name: 'b',
+        multiplier: 1.5,
+      }),
+    ).toThrow();
+  });
+
+  it('parses the modelmerger response fixture', () => {
+    const parsed = ModelMergerResponse.parse(fixture('modelmerger-response.json'));
+    expect(parsed.info).toContain('merged-AB.safetensors');
   });
 });
