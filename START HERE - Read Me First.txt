@@ -1,0 +1,26 @@
+Welcome to Forge Neo!
+
+To run the app, double-click the file named:
+
+    START HERE - Run Forge Neo.bat
+
+The first time you do this, it will take a few minutes to set up.
+After that, double-clicking the same file launches the app right away.
+
+
+If nothing happens when you double-click:
+
+  1. Make sure you have Node.js 20 or newer installed.
+     If not, download it from https://nodejs.org and install it,
+     then try again.
+
+  2. If you received Forge Neo as a ZIP file, make sure you
+     EXTRACTED it to a real folder first. Double-clicking the
+     .bat from inside the ZIP preview window will not work.
+
+  3. Windows may briefly scan the .bat file the first time you
+     run it. This is normal.
+
+
+Questions or problems? See README.md in this folder, or open an
+issue on the project's GitHub page.

@@ -67,6 +67,22 @@ To verify a PR end-to-end:
    - Open Settings → Backend tab → tweak Clip skip → Apply.
    - Open Extensions → toggle one off → restart backend on prompt.
 
+## Just want to run it?
+
+If you downloaded the source and only want to try the app (no
+terminal, no commands), open the folder in Windows File Explorer and
+double-click:
+
+```
+START HERE - Run Forge Neo.bat
+```
+
+It checks for Node.js, installs dependencies the first time, and
+launches the Electron app. Node.js 20 or newer is required — install
+it from https://nodejs.org if the launcher tells you it's missing.
+See `START HERE - Read Me First.txt` in the repo root for the same
+guidance in plain text.
+
 ## Dev
 
 ```sh
