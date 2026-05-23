@@ -8,13 +8,24 @@ import {
 } from '@tanstack/react-query';
 import { z } from 'zod';
 import {
+  CmdFlags,
+  Extension,
+  ExtensionToggleResponse,
+  type ExtrasSinglePayload,
+  ExtrasSingleResponse,
   GenerationResponse,
+  Lora,
+  type ModelMergerPayload,
+  ModelMergerResponse,
+  OptionMetadata,
   OptionsResponse,
+  PngInfoApiResponse,
   ProgressResponse,
   Sampler,
   Scheduler,
   SdModel,
   type Txt2ImgPayload,
+  Upscaler,
 } from '@shared/api/schemas.js';
 import { apiFetch, type ApiContext } from '../lib/apiClient.js';
 import { queryKeys } from '../lib/queryKeys.js';
@@ -23,6 +34,10 @@ import { useApiContext } from './useApiContext.js';
 const SdModels = z.array(SdModel);
 const Samplers = z.array(Sampler);
 const Schedulers = z.array(Scheduler);
+const Upscalers = z.array(Upscaler);
+const Loras = z.array(Lora);
+const Extensions = z.array(Extension);
+const OptionsSchema = z.array(OptionMetadata);
 const Empty = z.unknown();
 
 function ensureCtx(ctx: ApiContext | null): ApiContext {
@@ -67,6 +82,57 @@ export function useSchedulers(): UseQueryResult<Scheduler[]> {
     queryFn: () => apiFetch(ensureCtx(ctx), '/sdapi/v1/schedulers', Schedulers),
     enabled: ctx != null,
     staleTime: 5 * 60_000,
+  });
+}
+
+export function useUpscalers(): UseQueryResult<Upscaler[]> {
+  const ctx = useApiContext();
+  return useQuery({
+    queryKey: queryKeys.upscalers,
+    queryFn: () => apiFetch(ensureCtx(ctx), '/sdapi/v1/upscalers', Upscalers),
+    enabled: ctx != null,
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useCmdFlags(): UseQueryResult<Record<string, unknown>> {
+  const ctx = useApiContext();
+  return useQuery({
+    queryKey: queryKeys.cmdFlags,
+    queryFn: () => apiFetch(ensureCtx(ctx), '/sdapi/v1/cmd-flags', CmdFlags),
+    enabled: ctx != null,
+    staleTime: Infinity,
+  });
+}
+
+export function useLoras(): UseQueryResult<Lora[]> {
+  const ctx = useApiContext();
+  return useQuery({
+    queryKey: queryKeys.loras,
+    queryFn: () => apiFetch(ensureCtx(ctx), '/sdapi/v1/loras', Loras),
+    enabled: ctx != null,
+    staleTime: 60_000,
+  });
+}
+
+export function useExtensions(): UseQueryResult<Extension[]> {
+  const ctx = useApiContext();
+  return useQuery({
+    queryKey: queryKeys.extensions,
+    queryFn: () => apiFetch(ensureCtx(ctx), '/sdapi/v1/extensions', Extensions),
+    enabled: ctx != null,
+    staleTime: 30_000,
+  });
+}
+
+export function useOptionsSchema(): UseQueryResult<OptionMetadata[]> {
+  const ctx = useApiContext();
+  return useQuery({
+    queryKey: queryKeys.optionsSchema,
+    queryFn: () =>
+      apiFetch(ensureCtx(ctx), '/forge-neo/options-schema', OptionsSchema),
+    enabled: ctx != null,
+    staleTime: Infinity,
   });
 }
 
@@ -150,6 +216,151 @@ export function useInterrupt(): UseMutationResult<unknown, Error, void> {
       apiFetch(ensureCtx(ctx), '/sdapi/v1/interrupt', Empty, { method: 'POST' }),
   });
 }
+
+export type UseExtrasSingleResult = UseMutationResult<
+  ExtrasSingleResponse,
+  Error,
+  ExtrasSinglePayload
+> & {
+  abort: () => void;
+};
+
+export function useExtrasSingle(): UseExtrasSingleResult {
+  const ctx = useApiContext();
+  const controllerRef = useRef<AbortController | null>(null);
+
+  const mutation = useMutation<ExtrasSingleResponse, Error, ExtrasSinglePayload>({
+    mutationKey: ['extras-single'],
+    mutationFn: async (payload) => {
+      const controller = new AbortController();
+      controllerRef.current = controller;
+      return apiFetch(
+        ensureCtx(ctx),
+        '/sdapi/v1/extra-single-image',
+        ExtrasSingleResponse,
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        },
+      );
+    },
+    onSettled: () => {
+      controllerRef.current = null;
+    },
+  });
+
+  // eslint-disable-next-line react-hooks/refs
+  return Object.assign(mutation, {
+    abort: () => controllerRef.current?.abort(),
+  });
+}
+
+export function usePngInfoApi(): UseMutationResult<
+  PngInfoApiResponse,
+  Error,
+  { image: string }
+> {
+  const ctx = useApiContext();
+  return useMutation<PngInfoApiResponse, Error, { image: string }>({
+    mutationKey: ['png-info-api'],
+    mutationFn: (payload) =>
+      apiFetch(ensureCtx(ctx), '/sdapi/v1/png-info', PngInfoApiResponse, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+  });
+}
+
+export function useModelMerge(): UseMutationResult<
+  ModelMergerResponse,
+  Error,
+  ModelMergerPayload
+> {
+  const ctx = useApiContext();
+  const queryClient = useQueryClient();
+  return useMutation<ModelMergerResponse, Error, ModelMergerPayload>({
+    mutationKey: ['model-merge'],
+    mutationFn: (payload) =>
+      apiFetch(ensureCtx(ctx), '/forge-neo/modelmerger', ModelMergerResponse, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sdModels });
+    },
+  });
+}
+
+export function useToggleExtension(): UseMutationResult<
+  ExtensionToggleResponse,
+  Error,
+  { name: string; enabled: boolean }
+> {
+  const ctx = useApiContext();
+  const queryClient = useQueryClient();
+  return useMutation<ExtensionToggleResponse, Error, { name: string; enabled: boolean }>({
+    mutationKey: ['extension-toggle'],
+    mutationFn: ({ name, enabled }) =>
+      apiFetch(
+        ensureCtx(ctx),
+        `/forge-neo/extensions/${encodeURIComponent(name)}/toggle`,
+        ExtensionToggleResponse,
+        {
+          method: 'POST',
+          body: JSON.stringify({ enabled }),
+        },
+      ),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.extensions });
+    },
+  });
+}
+
+export function useSetOptions(): UseMutationResult<
+  unknown,
+  Error,
+  Record<string, unknown>
+> {
+  const ctx = useApiContext();
+  const queryClient = useQueryClient();
+  return useMutation<unknown, Error, Record<string, unknown>>({
+    mutationKey: ['set-options'],
+    mutationFn: (patch) =>
+      apiFetch(ensureCtx(ctx), '/sdapi/v1/options', Empty, {
+        method: 'POST',
+        body: JSON.stringify(patch),
+      }),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.options });
+    },
+  });
+}
+
+function makeRefresh(path: string, key: string) {
+  return function useRefresh(): UseMutationResult<unknown, Error, void> {
+    const ctx = useApiContext();
+    return useMutation<unknown, Error, void>({
+      mutationKey: [key],
+      mutationFn: () =>
+        apiFetch(ensureCtx(ctx), path, Empty, { method: 'POST' }),
+    });
+  };
+}
+
+export const useRefreshCheckpoints = makeRefresh(
+  '/sdapi/v1/refresh-checkpoints',
+  'refresh-checkpoints',
+);
+export const useRefreshVae = makeRefresh('/sdapi/v1/refresh-vae', 'refresh-vae');
+export const useRefreshEmbeddings = makeRefresh(
+  '/sdapi/v1/refresh-embeddings',
+  'refresh-embeddings',
+);
+export const useRefreshLoras = makeRefresh(
+  '/forge-neo/refresh-loras',
+  'refresh-loras',
+);
 
 interface SetCheckpointContext {
   prev: OptionsResponse | undefined;

@@ -106,3 +106,91 @@ export const Embedding = z.object({
   vectors: z.number().nullable().optional(),
 });
 export type Embedding = z.infer<typeof Embedding>;
+
+export const ExtrasSinglePayload = z.object({
+  image: z.string(),
+  resize_mode: z.number().int().default(0),
+  show_extras_results: z.boolean().default(true),
+  gfpgan_visibility: z.number().min(0).max(1).default(0),
+  codeformer_visibility: z.number().min(0).max(1).default(0),
+  codeformer_weight: z.number().min(0).max(1).default(0),
+  upscaling_resize: z.number().default(2),
+  upscaling_resize_w: z.number().int().default(512),
+  upscaling_resize_h: z.number().int().default(512),
+  upscaling_crop: z.boolean().default(true),
+  upscaler_1: z.string().default('None'),
+  upscaler_2: z.string().default('None'),
+  extras_upscaler_2_visibility: z.number().min(0).max(1).default(0),
+  upscale_first: z.boolean().default(false),
+});
+export type ExtrasSinglePayload = z.infer<typeof ExtrasSinglePayload>;
+
+export const ExtrasSingleResponse = z.object({
+  html_info: z.string(),
+  image: z.string(),
+});
+export type ExtrasSingleResponse = z.infer<typeof ExtrasSingleResponse>;
+
+export const PngInfoApiResponse = z.object({
+  info: z.string().default(''),
+  items: z.record(z.unknown()).default({}),
+  parameters: z.record(z.unknown()).default({}),
+});
+export type PngInfoApiResponse = z.infer<typeof PngInfoApiResponse>;
+
+export const ModelMergerPayload = z.object({
+  primary_model_name: z.string(),
+  secondary_model_name: z.string(),
+  tertiary_model_name: z.string().default(''),
+  interp_method: z
+    .enum(['Weighted sum', 'Add difference', 'No interpolation'])
+    .default('Weighted sum'),
+  multiplier: z.number().min(0).max(1).default(0.5),
+  save_as_half: z.boolean().default(false),
+  custom_name: z.string().default(''),
+  checkpoint_format: z.enum(['safetensors', 'ckpt']).default('safetensors'),
+  config_source: z.number().int().default(0),
+  bake_in_vae: z.string().default(''),
+  discard_weights: z.string().default(''),
+  save_metadata: z.boolean().default(true),
+});
+export type ModelMergerPayload = z.infer<typeof ModelMergerPayload>;
+
+export const ModelMergerResponse = z.object({
+  info: z.string(),
+});
+export type ModelMergerResponse = z.infer<typeof ModelMergerResponse>;
+
+export const Extension = z.object({
+  name: z.string(),
+  remote: z.string().nullable().optional(),
+  branch: z.string().nullable().optional(),
+  commit_hash: z.string().nullable().optional(),
+  commit_date: z.number().nullable().optional(),
+  version: z.string().nullable().optional(),
+  enabled: z.boolean(),
+});
+export type Extension = z.infer<typeof Extension>;
+
+export const ExtensionToggleResponse = z.object({
+  name: z.string(),
+  enabled: z.boolean(),
+  restart_required: z.boolean().default(true),
+});
+export type ExtensionToggleResponse = z.infer<typeof ExtensionToggleResponse>;
+
+export const OptionMetadata = z.object({
+  key: z.string(),
+  label: z.string(),
+  default: z.unknown().nullable().optional(),
+  section: z.array(z.string().nullable()).default([]),
+  component: z.string().nullable().optional(),
+  component_args: z.record(z.unknown()).default({}),
+  category_id: z.string().nullable().optional(),
+  refresh: z.boolean().default(false),
+  comment: z.string().default(''),
+});
+export type OptionMetadata = z.infer<typeof OptionMetadata>;
+
+export const CmdFlags = z.record(z.unknown());
+export type CmdFlags = z.infer<typeof CmdFlags>;

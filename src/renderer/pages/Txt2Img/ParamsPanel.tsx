@@ -1,6 +1,6 @@
 import { useEffect, type ReactElement } from 'react';
 import { useTxt2ImgStore } from '../../lib/txt2imgStore.js';
-import { useSamplers, useSchedulers } from '../../hooks/useSdApi.js';
+import { useSamplers, useSchedulers, useUpscalers } from '../../hooks/useSdApi.js';
 import { Field } from './Field.js';
 
 export function ParamsPanel(): ReactElement {
@@ -12,6 +12,7 @@ export function ParamsPanel(): ReactElement {
   const setShowPreview = useTxt2ImgStore((s) => s.setShowPreview);
   const samplers = useSamplers();
   const schedulers = useSchedulers();
+  const upscalers = useUpscalers();
 
   useEffect(() => {
     const first = samplers.data?.[0];
@@ -158,15 +159,20 @@ export function ParamsPanel(): ReactElement {
               />
             </Field>
             <Field label="Upscaler">
-              <input
-                type="text"
-                placeholder="Latent"
+              <select
                 value={form.hr_upscaler ?? ''}
                 onChange={(e) =>
                   setField('hr_upscaler', e.target.value || undefined)
                 }
                 className="w-full px-2 py-1.5 rounded bg-bg-panel border border-border"
-              />
+              >
+                <option value="">Latent</option>
+                {upscalers.data?.map((u) => (
+                  <option key={u.name} value={u.name}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
             </Field>
             <Field label="Denoising strength">
               <input

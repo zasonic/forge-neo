@@ -10,11 +10,15 @@ import {
 import { Sidebar } from './app/layout/Sidebar.js';
 import { StatusBar } from './app/layout/StatusBar.js';
 import { Placeholder } from './pages/Placeholder.js';
-import { LegacyFrame } from './pages/Legacy/LegacyFrame.js';
 import { SetupWizard } from './pages/Setup/Wizard.js';
 import { Txt2ImgPage } from './pages/Txt2Img/index.js';
 import { ModelsPage } from './pages/Models/index.js';
 import { GalleryPage } from './pages/Gallery/index.js';
+import { ExtrasPage } from './pages/Extras/index.js';
+import { PngInfoPage } from './pages/PngInfo/index.js';
+import { ModelMergerPage } from './pages/ModelMerger/index.js';
+import { ExtensionsPage } from './pages/Extensions/index.js';
+import { SettingsPage } from './pages/Settings/index.js';
 import { useBackendStatusSync } from './hooks/useBackendStatus.js';
 
 function Shell({ children }: { children: ReactNode }): ReactElement {
@@ -36,6 +40,25 @@ function ShellOutlet(): ReactElement {
       <Outlet />
     </Shell>
   );
+}
+
+function LegacyRedirect(): ReactElement {
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => {
+    const tab = pathname.replace(/^\/legacy\/?/, '');
+    const target: Record<string, string> = {
+      txt2img: '/generate/txt2img',
+      img2img: '/generate/img2img',
+      extras: '/extras',
+      pnginfo: '/png-info',
+      modelmerger: '/model-merger',
+      extensions: '/extensions',
+      settings: '/settings',
+    };
+    navigate(target[tab] ?? '/generate/txt2img', { replace: true });
+  }, [navigate, pathname]);
+  return <div />;
 }
 
 function InstallGuard({ children }: { children: ReactNode }): ReactElement {
@@ -78,12 +101,22 @@ const router = createHashRouter([
         element: <ShellOutlet />,
         children: [
           { path: 'generate/txt2img', element: <Txt2ImgPage /> },
-          { path: 'generate/img2img', element: <Placeholder title="Img2Img" milestone="M4" /> },
+          {
+            path: 'generate/img2img',
+            element: <Placeholder title="Img2Img" milestone="M4" />,
+          },
           { path: 'gallery', element: <GalleryPage /> },
           { path: 'models', element: <ModelsPage /> },
-          { path: 'loras', element: <Placeholder title="LoRAs" milestone="M4" /> },
-          { path: 'settings', element: <Placeholder title="Settings" milestone="M5" /> },
-          { path: 'legacy/:tab', element: <LegacyFrame /> },
+          {
+            path: 'loras',
+            element: <Placeholder title="LoRAs" milestone="M4" />,
+          },
+          { path: 'extras', element: <ExtrasPage /> },
+          { path: 'png-info', element: <PngInfoPage /> },
+          { path: 'model-merger', element: <ModelMergerPage /> },
+          { path: 'extensions', element: <ExtensionsPage /> },
+          { path: 'settings', element: <SettingsPage /> },
+          { path: 'legacy/*', element: <LegacyRedirect /> },
         ],
       },
       { path: '*', element: <Navigate to="/generate/txt2img" replace /> },

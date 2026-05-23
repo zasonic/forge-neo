@@ -1,0 +1,29 @@
+[
+  {
+    "name": "forge-neo-api",
+    "remote": null,
+    "branch": null,
+    "commit_hash": null,
+    "commit_date": null,
+    "version": null,
+    "enabled": true
+  },
+  {
+    "name": "sd-webui-controlnet",
+    "remote": "https://github.com/Mikubill/sd-webui-controlnet.git",
+    "branch": "main",
+    "commit_hash": "abc1234def5678",
+    "commit_date": 1730000000,
+    "version": "v1.1.450",
+    "enabled": true
+  },
+  {
+    "name": "sd-webui-someextension",
+    "remote": "https://example.com/some.git",
+    "branch": "main",
+    "commit_hash": "deadbeef",
+    "commit_date": null,
+    "version": null,
+    "enabled": false
+  }
+]
