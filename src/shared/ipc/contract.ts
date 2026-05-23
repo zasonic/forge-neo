@@ -1,5 +1,12 @@
 import type { StepName } from '../constants.js';
 
+export interface OutputEntry {
+  path: string;
+  relPath: string;
+  mtimeMs: number;
+  sizeBytes: number;
+}
+
 export type BackendStatus =
   | { kind: 'idle' }
   | { kind: 'starting'; pid?: number }
@@ -46,8 +53,6 @@ export const IPC = {
     scanModels: 'fs:scanModels',
     watchOutputs: 'fs:watchOutputs',
     outputsEvent: 'fs:outputs:event',
-    readPngInfo: 'fs:readPngInfo',
-    showItemInFolder: 'fs:showItemInFolder',
   },
   dialog: {
     openImage: 'dialog:openImage',
@@ -64,6 +69,9 @@ export const IPC = {
     reset: 'installer:reset',
     setByoPython: 'installer:setByoPython',
     event: 'installer:event',
+  },
+  shell: {
+    showItemInFolder: 'shell:showItemInFolder',
   },
 } as const;
 

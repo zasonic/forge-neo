@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Txt2ImgPayload, type GenerationResponse, type PngInfoResult } from '@shared/api/schemas.js';
+import { Txt2ImgPayload, type GenerationResponse } from '@shared/api/schemas.js';
 
 type FormState = Txt2ImgPayload;
 
@@ -12,30 +12,9 @@ interface Txt2ImgStore {
   setShowPreview: (b: boolean) => void;
   randomSeed: () => void;
   recycleSeed: () => void;
-  appendToPrompt: (text: string) => void;
-  loadFromMetadata: (info: PngInfoResult) => void;
 }
 
 const initialForm: FormState = Txt2ImgPayload.parse({ prompt: '' });
-
-function parseIntOr<T>(s: string | undefined, fallback: T): number | T {
-  if (s == null) return fallback;
-  const n = parseInt(s, 10);
-  return Number.isFinite(n) ? n : fallback;
-}
-
-function parseFloatOr<T>(s: string | undefined, fallback: T): number | T {
-  if (s == null) return fallback;
-  const n = parseFloat(s);
-  return Number.isFinite(n) ? n : fallback;
-}
-
-function parseSize(s: string | undefined): { width?: number; height?: number } {
-  if (!s) return {};
-  const m = /^(\d+)\s*x\s*(\d+)$/i.exec(s.trim());
-  if (!m) return {};
-  return { width: Number(m[1]), height: Number(m[2]) };
-}
 
 export const useTxt2ImgStore = create<Txt2ImgStore>((set, get) => ({
   form: initialForm,
@@ -58,30 +37,5 @@ export const useTxt2ImgStore = create<Txt2ImgStore>((set, get) => ({
     } catch {
       // info wasn't JSON; nothing to recycle
     }
-  },
-  appendToPrompt: (text) =>
-    set((s) => ({
-      form: {
-        ...s.form,
-        prompt: s.form.prompt.length > 0 ? `${s.form.prompt} ${text}` : text,
-      },
-    })),
-  loadFromMetadata: (info) => {
-    const p = info.parameters;
-    const { width, height } = parseSize(p.Size);
-    set((s) => ({
-      form: {
-        ...s.form,
-        prompt: info.prompt,
-        negative_prompt: info.negativePrompt,
-        sampler_name: p.Sampler ?? s.form.sampler_name,
-        scheduler: p['Schedule type'] ?? s.form.scheduler,
-        steps: parseIntOr(p.Steps, s.form.steps),
-        cfg_scale: parseFloatOr(p['CFG scale'], s.form.cfg_scale),
-        seed: parseIntOr(p.Seed, s.form.seed),
-        width: width ?? s.form.width,
-        height: height ?? s.form.height,
-      },
-    }));
   },
 }));

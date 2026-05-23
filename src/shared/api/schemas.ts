@@ -106,11 +106,3 @@ export const Embedding = z.object({
   vectors: z.number().nullable().optional(),
 });
 export type Embedding = z.infer<typeof Embedding>;
-
-export const PngInfoResult = z.object({
-  prompt: z.string(),
-  negativePrompt: z.string(),
-  parameters: z.record(z.string()),
-  raw: z.string(),
-});
-export type PngInfoResult = z.infer<typeof PngInfoResult>;
