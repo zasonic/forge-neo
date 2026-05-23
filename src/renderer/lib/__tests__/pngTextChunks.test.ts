@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { Buffer } from 'node:buffer';
-import { crc32 } from 'node:zlib';
 import { parsePngTextChunks } from '../pngTextChunks.js';
 
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
+// The parser skips CRC bytes without verifying them, so the tests use a
+// placeholder zero CRC. This keeps the test compatible with Node 20.x,
+// which predates zlib.crc32().
 function chunk(type: string, data: Buffer): Buffer {
   const len = Buffer.alloc(4);
   len.writeUInt32BE(data.length, 0);
   const typeBuf = Buffer.from(type, 'latin1');
   const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(Buffer.concat([typeBuf, data])), 0);
   return Buffer.concat([len, typeBuf, data, crc]);
 }
 
