@@ -10,6 +10,15 @@ export function ProgressPanel(): ReactElement | null {
 
   if (!isPending) return null;
 
+  if (progress.isError) {
+    return (
+      <div className="p-4 border-b border-border text-xs text-red-300 bg-red-500/10">
+        Lost contact with backend while generating ({progress.error.message}). It
+        may have crashed — check the status bar.
+      </div>
+    );
+  }
+
   const p = progress.data;
   const pct = p ? Math.max(0, Math.min(1, p.progress)) * 100 : 0;
   const indeterminate = !p || (p.progress < 0.01 && !p.state.sampling_step);

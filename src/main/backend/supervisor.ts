@@ -181,11 +181,22 @@ export class Supervisor extends EventEmitter {
         resolve();
       };
       child.once('exit', done);
-      treeKill(pid, 'SIGTERM');
+      treeKill(pid, 'SIGTERM', (err) => {
+        if (err) this.log('app', `treeKill SIGTERM error pid=${pid}: ${err.message}`);
+      });
       setTimeout(() => {
-        if (!resolved) treeKill(pid, 'SIGKILL', done);
+        if (resolved) return;
+        this.log('app', `backend did not exit after ${timeoutMs}ms; sending SIGKILL`);
+        treeKill(pid, 'SIGKILL', (err) => {
+          if (err) this.log('app', `treeKill SIGKILL error pid=${pid}: ${err.message}`);
+          done();
+        });
+        // Belt-and-braces: even if the SIGKILL callback never fires (Windows
+        // taskkill failure mode), unblock the stop() promise after a short grace.
+        setTimeout(done, 1000);
       }, timeoutMs);
     });
+    this.setStatus({ kind: 'idle' });
   }
 
   async restart(): Promise<void> {

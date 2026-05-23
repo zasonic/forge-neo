@@ -5,9 +5,7 @@ import type { Installer } from '../backend/installer.js';
 
 export function registerInstallerChannel(win: BrowserWindow, installer: Installer): void {
   ipcMain.handle(IPC.installer.state, () => installer.getState());
-  ipcMain.handle(IPC.installer.runFrom, (_e, start?: StepName) => {
-    void installer.runFrom(start);
-  });
+  ipcMain.handle(IPC.installer.runFrom, (_e, start?: StepName) => installer.runFrom(start));
   ipcMain.handle(IPC.installer.cancel, () => installer.cancel());
   ipcMain.handle(IPC.installer.reset, () => installer.reset());
   ipcMain.handle(IPC.installer.setByoPython, (_e, path: string | null) =>

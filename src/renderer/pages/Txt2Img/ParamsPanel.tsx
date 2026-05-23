@@ -37,7 +37,8 @@ export function ParamsPanel(): ReactElement {
             onChange={(e) => setField('sampler_name', e.target.value)}
             className="w-full px-2 py-1.5 rounded bg-bg-panel border border-border"
           >
-            {!samplers.data && <option value="">loading…</option>}
+            {samplers.isError && <option value="">couldn’t load — backend issue?</option>}
+            {!samplers.data && !samplers.isError && <option value="">loading…</option>}
             {samplers.data?.map((s) => (
               <option key={s.name} value={s.name}>
                 {s.name}
@@ -51,7 +52,8 @@ export function ParamsPanel(): ReactElement {
             onChange={(e) => setField('scheduler', e.target.value)}
             className="w-full px-2 py-1.5 rounded bg-bg-panel border border-border"
           >
-            {!schedulers.data && <option value="">loading…</option>}
+            {schedulers.isError && <option value="">couldn’t load — backend issue?</option>}
+            {!schedulers.data && !schedulers.isError && <option value="">loading…</option>}
             {schedulers.data?.map((s) => (
               <option key={s.name} value={s.name}>
                 {s.label ?? s.name}

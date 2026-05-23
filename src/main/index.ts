@@ -57,10 +57,18 @@ async function createWindow(): Promise<void> {
     backgroundColor: '#0b0c0f',
     autoHideMenuBar: true,
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      // .mjs extension is required to load this as ESM. Electron's preload
+      // loader uses require() under the hood and would otherwise hit
+      // ERR_REQUIRE_ESM and silently leave window.forge undefined.
+      preload: join(__dirname, '../preload/index.mjs'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      // sandbox: false because the preload is compiled as ESM (the whole project
+      // is `"type": "module"`). Sandboxed preloads must be CJS — they fail to
+      // load silently otherwise, leaving window.forge undefined and the
+      // renderer crashing on first IPC call. contextIsolation stays on, which
+      // is the main boundary that keeps preload internals out of the renderer.
+      sandbox: false,
       webviewTag: false,
     },
   });
@@ -92,7 +100,11 @@ async function createWindow(): Promise<void> {
 
   const installed = setupStore.get('installedAt') != null;
   if (installed && settingsStore.get('autoStartBackend')) {
-    void supervisor.start();
+    supervisor.start().catch((err: unknown) => {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[supervisor] auto-start failed:', msg);
+      supervisor?.emit('log', { stream: 'app', text: `auto-start failed: ${msg}`, ts: Date.now() });
+    });
   }
 }
 
