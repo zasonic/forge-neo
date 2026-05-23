@@ -1,13 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC, type BackendStatus, type LogLine, type SettingsShape, type InstallerEvent, type InstallerState } from '../shared/ipc/contract.js';
 import type { StepName } from '../shared/constants.js';
-import type { PngInfoResult } from '../shared/api/schemas.js';
-
-export interface OutputEntry {
-  path: string;
-  mtimeMs: number;
-  sizeBytes: number;
-}
 
 const bridge = {
   backend: {
@@ -27,8 +20,8 @@ const bridge = {
     },
   },
   fs: {
-    scanOutputs: (): Promise<OutputEntry[]> => ipcRenderer.invoke(IPC.fs.scanOutputs),
-    scanModels: (kind: 'checkpoints' | 'loras' | 'vae' | 'embeddings'): Promise<OutputEntry[]> =>
+    scanOutputs: (): Promise<unknown> => ipcRenderer.invoke(IPC.fs.scanOutputs),
+    scanModels: (kind: 'checkpoints' | 'loras' | 'vae' | 'embeddings'): Promise<unknown> =>
       ipcRenderer.invoke(IPC.fs.scanModels, kind),
     watchOutputs: (): Promise<boolean> => ipcRenderer.invoke(IPC.fs.watchOutputs),
     onOutputsChanged: (cb: () => void): (() => void) => {
@@ -36,10 +29,6 @@ const bridge = {
       ipcRenderer.on(IPC.fs.outputsEvent, fn);
       return () => ipcRenderer.off(IPC.fs.outputsEvent, fn);
     },
-    readPngInfo: (path: string): Promise<PngInfoResult | null> =>
-      ipcRenderer.invoke(IPC.fs.readPngInfo, path),
-    showItemInFolder: (path: string): Promise<void> =>
-      ipcRenderer.invoke(IPC.fs.showItemInFolder, path),
   },
   dialog: {
     openImage: (): Promise<{ path: string; dataUrl: string } | null> =>

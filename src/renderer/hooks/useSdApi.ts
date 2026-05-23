@@ -9,8 +9,6 @@ import {
 import { z } from 'zod';
 import {
   GenerationResponse,
-  type Img2ImgPayload,
-  Lora,
   OptionsResponse,
   ProgressResponse,
   Sampler,
@@ -25,7 +23,6 @@ import { useApiContext } from './useApiContext.js';
 const SdModels = z.array(SdModel);
 const Samplers = z.array(Sampler);
 const Schedulers = z.array(Scheduler);
-const Loras = z.array(Lora);
 const Empty = z.unknown();
 
 function ensureCtx(ctx: ApiContext | null): ApiContext {
@@ -151,57 +148,6 @@ export function useInterrupt(): UseMutationResult<unknown, Error, void> {
     mutationKey: ['interrupt'],
     mutationFn: () =>
       apiFetch(ensureCtx(ctx), '/sdapi/v1/interrupt', Empty, { method: 'POST' }),
-  });
-}
-
-export type UseImg2ImgResult = UseMutationResult<
-  GenerationResponse,
-  Error,
-  Img2ImgPayload
-> & {
-  abort: () => void;
-};
-
-export function useImg2Img(): UseImg2ImgResult {
-  const ctx = useApiContext();
-  const queryClient = useQueryClient();
-  const controllerRef = useRef<AbortController | null>(null);
-
-  const mutation = useMutation<GenerationResponse, Error, Img2ImgPayload>({
-    mutationKey: ['img2img'],
-    mutationFn: async (payload) => {
-      const controller = new AbortController();
-      controllerRef.current = controller;
-      return apiFetch(
-        ensureCtx(ctx),
-        '/sdapi/v1/img2img',
-        GenerationResponse,
-        {
-          method: 'POST',
-          body: JSON.stringify(payload),
-          signal: controller.signal,
-        },
-      );
-    },
-    onSettled: () => {
-      controllerRef.current = null;
-      queryClient.removeQueries({ queryKey: queryKeys.progress });
-    },
-  });
-
-  // eslint-disable-next-line react-hooks/refs
-  return Object.assign(mutation, {
-    abort: () => controllerRef.current?.abort(),
-  });
-}
-
-export function useLoras(): UseQueryResult<Lora[]> {
-  const ctx = useApiContext();
-  return useQuery({
-    queryKey: queryKeys.loras,
-    queryFn: () => apiFetch(ensureCtx(ctx), '/sdapi/v1/loras', Loras),
-    enabled: ctx != null,
-    staleTime: 60_000,
   });
 }
 
