@@ -1,9 +1,12 @@
 import { useState, type ReactElement } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTxt2ImgStore } from '../../lib/txt2imgStore.js';
+import { useImg2ImgStore } from '../../lib/img2imgStore.js';
 
 export function ResultGrid(): ReactElement {
   const lastResult = useTxt2ImgStore((s) => s.lastResult);
   const [zoom, setZoom] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   if (!lastResult || lastResult.images.length === 0) {
     return (
@@ -12,6 +15,14 @@ export function ResultGrid(): ReactElement {
       </div>
     );
   }
+
+  const sendToImg2Img = (img: string): void => {
+    useImg2ImgStore.getState().setInitImage('(from txt2img)', img);
+    useImg2ImgStore.getState().loadFromTxt2Img();
+    navigate('/generate/img2img');
+  };
+
+  const first = lastResult.images[0];
 
   return (
     <div className="p-3">
@@ -32,9 +43,9 @@ export function ResultGrid(): ReactElement {
       </div>
       <div className="mt-3 flex items-center gap-2 text-xs">
         <button
-          disabled
-          title="Coming in M4"
-          className="px-3 py-1.5 rounded bg-white/5 text-white/40 cursor-not-allowed"
+          onClick={() => first && sendToImg2Img(first)}
+          disabled={!first}
+          className="px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 disabled:opacity-40"
         >
           Send to img2img
         </button>

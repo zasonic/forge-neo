@@ -1,22 +1,31 @@
 import { create } from 'zustand';
-import { Txt2ImgPayload, type GenerationResponse, type PngInfoResult } from '@shared/api/schemas.js';
+import {
+  Img2ImgPayload,
+  type GenerationResponse,
+  type PngInfoResult,
+} from '@shared/api/schemas.js';
+import { useTxt2ImgStore } from './txt2imgStore.js';
 
-type FormState = Txt2ImgPayload;
+type FormState = Img2ImgPayload;
 
-interface Txt2ImgStore {
+interface Img2ImgStore {
   form: FormState;
+  initImagePath: string | null;
   lastResult: GenerationResponse | null;
   showPreview: boolean;
   setField: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
+  setInitImage: (path: string, base64: string) => void;
+  clearInitImage: () => void;
   setResult: (r: GenerationResponse) => void;
   setShowPreview: (b: boolean) => void;
   randomSeed: () => void;
   recycleSeed: () => void;
   appendToPrompt: (text: string) => void;
+  loadFromTxt2Img: () => void;
   loadFromMetadata: (info: PngInfoResult) => void;
 }
 
-const initialForm: FormState = Txt2ImgPayload.parse({ prompt: '' });
+const initialForm: FormState = Img2ImgPayload.parse({ prompt: '', init_images: [] });
 
 function parseIntOr<T>(s: string | undefined, fallback: T): number | T {
   if (s == null) return fallback;
@@ -37,12 +46,20 @@ function parseSize(s: string | undefined): { width?: number; height?: number } {
   return { width: Number(m[1]), height: Number(m[2]) };
 }
 
-export const useTxt2ImgStore = create<Txt2ImgStore>((set, get) => ({
+export const useImg2ImgStore = create<Img2ImgStore>((set, get) => ({
   form: initialForm,
+  initImagePath: null,
   lastResult: null,
   showPreview: false,
   setField: (key, value) =>
     set((s) => ({ form: { ...s.form, [key]: value } })),
+  setInitImage: (path, base64) =>
+    set((s) => ({
+      initImagePath: path,
+      form: { ...s.form, init_images: [base64] },
+    })),
+  clearInitImage: () =>
+    set((s) => ({ initImagePath: null, form: { ...s.form, init_images: [] } })),
   setResult: (r) => set({ lastResult: r }),
   setShowPreview: (b) => set({ showPreview: b }),
   randomSeed: () => set((s) => ({ form: { ...s.form, seed: -1 } })),
@@ -66,6 +83,25 @@ export const useTxt2ImgStore = create<Txt2ImgStore>((set, get) => ({
         prompt: s.form.prompt.length > 0 ? `${s.form.prompt} ${text}` : text,
       },
     })),
+  loadFromTxt2Img: () => {
+    const src = useTxt2ImgStore.getState().form;
+    set((s) => ({
+      form: {
+        ...s.form,
+        prompt: src.prompt,
+        negative_prompt: src.negative_prompt,
+        sampler_name: src.sampler_name,
+        scheduler: src.scheduler,
+        steps: src.steps,
+        cfg_scale: src.cfg_scale,
+        width: src.width,
+        height: src.height,
+        seed: src.seed,
+        batch_size: src.batch_size,
+        n_iter: src.n_iter,
+      },
+    }));
+  },
   loadFromMetadata: (info) => {
     const p = info.parameters;
     const { width, height } = parseSize(p.Size);
