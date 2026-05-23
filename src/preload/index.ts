@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPC, type BackendStatus, type LogLine, type SettingsShape, type InstallerEvent, type InstallerState } from '../shared/ipc/contract.js';
+import { IPC, type BackendStatus, type LogLine, type OutputEntry, type SettingsShape, type InstallerEvent, type InstallerState } from '../shared/ipc/contract.js';
 import type { StepName } from '../shared/constants.js';
 
 const bridge = {
@@ -20,7 +20,7 @@ const bridge = {
     },
   },
   fs: {
-    scanOutputs: (): Promise<unknown> => ipcRenderer.invoke(IPC.fs.scanOutputs),
+    scanOutputs: (): Promise<OutputEntry[]> => ipcRenderer.invoke(IPC.fs.scanOutputs),
     scanModels: (kind: 'checkpoints' | 'loras' | 'vae' | 'embeddings'): Promise<unknown> =>
       ipcRenderer.invoke(IPC.fs.scanModels, kind),
     watchOutputs: (): Promise<boolean> => ipcRenderer.invoke(IPC.fs.watchOutputs),
@@ -29,6 +29,10 @@ const bridge = {
       ipcRenderer.on(IPC.fs.outputsEvent, fn);
       return () => ipcRenderer.off(IPC.fs.outputsEvent, fn);
     },
+  },
+  shell: {
+    showItemInFolder: (path: string): Promise<boolean> =>
+      ipcRenderer.invoke(IPC.shell.showItemInFolder, path),
   },
   dialog: {
     openImage: (): Promise<{ path: string; dataUrl: string } | null> =>
