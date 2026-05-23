@@ -14,6 +14,7 @@ import { LegacyFrame } from './pages/Legacy/LegacyFrame.js';
 import { SetupWizard } from './pages/Setup/Wizard.js';
 import { Txt2ImgPage } from './pages/Txt2Img/index.js';
 import { ModelsPage } from './pages/Models/index.js';
+import { GalleryPage } from './pages/Gallery/index.js';
 import { useBackendStatusSync } from './hooks/useBackendStatus.js';
 
 function Shell({ children }: { children: ReactNode }): ReactElement {
@@ -78,7 +79,7 @@ const router = createHashRouter([
         children: [
           { path: 'generate/txt2img', element: <Txt2ImgPage /> },
           { path: 'generate/img2img', element: <Placeholder title="Img2Img" milestone="M4" /> },
-          { path: 'gallery', element: <Placeholder title="Gallery" milestone="M4" /> },
+          { path: 'gallery', element: <GalleryPage /> },
           { path: 'models', element: <ModelsPage /> },
           { path: 'loras', element: <Placeholder title="LoRAs" milestone="M4" /> },
           { path: 'settings', element: <Placeholder title="Settings" milestone="M5" /> },

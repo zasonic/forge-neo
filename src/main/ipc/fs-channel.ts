@@ -1,20 +1,14 @@
 import { ipcMain, type BrowserWindow } from 'electron';
 import { readdir, stat } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { existsSync } from 'node:fs';
 import chokidar, { type FSWatcher } from 'chokidar';
-import { IPC } from '../../shared/ipc/contract.js';
+import { IPC, type OutputEntry } from '../../shared/ipc/contract.js';
 import { settingsStore } from '../config/store.js';
 import { resolveInstallPaths } from '../../shared/paths.js';
 
 const WATCH_DEPTH = 3;
 const DEBOUNCE_MS = 250;
-
-export interface OutputEntry {
-  path: string;
-  mtimeMs: number;
-  sizeBytes: number;
-}
 
 async function scanDir(root: string, depth: number): Promise<OutputEntry[]> {
   if (!existsSync(root)) return [];
@@ -27,7 +21,12 @@ async function scanDir(root: string, depth: number): Promise<OutputEntry[]> {
         if (d > 0) await walk(p, d - 1);
       } else if (/\.(png|jpe?g|webp)$/i.test(e.name)) {
         const s = await stat(p);
-        out.push({ path: p, mtimeMs: s.mtimeMs, sizeBytes: s.size });
+        out.push({
+          path: p,
+          relPath: relative(root, p),
+          mtimeMs: s.mtimeMs,
+          sizeBytes: s.size,
+        });
       }
     }
   }

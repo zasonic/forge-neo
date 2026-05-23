@@ -9,6 +9,7 @@ import { registerSettingsChannel } from './ipc/settings-channel.js';
 import { registerDialogChannel } from './ipc/dialog-channel.js';
 import { registerFsChannel } from './ipc/fs-channel.js';
 import { registerInstallerChannel } from './ipc/installer-channel.js';
+import { registerShellChannel } from './ipc/shell-channel.js';
 import { FORGE_IMG_SCHEME, registerForgeImgProtocol, registerForgeImgPrivileged } from './protocols/forge-img.js';
 import { resolveInstallPaths } from '../shared/paths.js';
 
@@ -24,7 +25,7 @@ let supervisor: Supervisor | null = null;
 
 function buildCsp(): string {
   const dev = isDev ? "'unsafe-eval' 'unsafe-inline'" : '';
-  const connect = ["'self'", 'http://127.0.0.1:*', 'ws://127.0.0.1:*'];
+  const connect = ["'self'", 'http://127.0.0.1:*', 'ws://127.0.0.1:*', `${FORGE_IMG_SCHEME}:`];
   if (isDev) connect.push('ws://localhost:*');
   return [
     `default-src 'self'`,
@@ -84,6 +85,7 @@ async function createWindow(): Promise<void> {
   registerDialogChannel(mainWindow);
   registerFsChannel(mainWindow);
   registerInstallerChannel(mainWindow, installer);
+  registerShellChannel();
 
   if (DEV_SERVER_URL) {
     await mainWindow.loadURL(DEV_SERVER_URL);
