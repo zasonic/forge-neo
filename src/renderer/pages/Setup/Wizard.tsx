@@ -27,7 +27,7 @@ export function SetupWizard(): ReactElement {
 
   useEffect(() => {
     if (done) {
-      navigate('/legacy/txt2img', { replace: true });
+      navigate('/generate/txt2img', { replace: true });
     }
   }, [done, navigate]);
 
