@@ -50,6 +50,7 @@ export function useImageMetadata(entry: OutputEntry | null): MetadataState {
     if (inflightRef.current === entry.path) return;
     inflightRef.current = entry.path;
 
+    const controller = new AbortController();
     let alive = true;
     const settle = (next: MetadataState): void => {
       cache.set(entry.path, next);
@@ -57,13 +58,14 @@ export function useImageMetadata(entry: OutputEntry | null): MetadataState {
       if (alive) setVersion((v) => v + 1);
     };
 
-    fetch(pathToForgeImg(entry.relPath))
+    fetch(pathToForgeImg(entry.relPath), { signal: controller.signal })
       .then(async (res) => {
         if (!res.ok) {
           settle({ kind: 'error', message: 'File no longer exists.' });
           return;
         }
         const buf = await res.arrayBuffer();
+        if (controller.signal.aborted) return;
 
         if (isPng(entry.relPath)) {
           const chunks = parsePngTextChunks(buf);
@@ -83,7 +85,9 @@ export function useImageMetadata(entry: OutputEntry | null): MetadataState {
           const png = await apiFetch(ctx, '/sdapi/v1/png-info', PngInfoResponse, {
             method: 'POST',
             body: JSON.stringify({ image: `data:${mime};base64,${base64}` }),
+            signal: controller.signal,
           });
+          if (controller.signal.aborted) return;
           const text = (png.info ?? '').trim();
           settle(
             text.length
@@ -104,12 +108,17 @@ export function useImageMetadata(entry: OutputEntry | null): MetadataState {
         });
       })
       .catch((err: unknown) => {
+        if (controller.signal.aborted) {
+          if (inflightRef.current === entry.path) inflightRef.current = null;
+          return;
+        }
         const message = err instanceof Error ? err.message : String(err);
         settle({ kind: 'error', message });
       });
 
     return () => {
       alive = false;
+      controller.abort();
     };
   }, [entry, ctx]);
 
