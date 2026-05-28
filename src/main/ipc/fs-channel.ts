@@ -44,12 +44,14 @@ export function registerFsChannel(win: BrowserWindow): void {
 
   ipcMain.handle(IPC.fs.scanModels, async (_e, kind: 'checkpoints' | 'loras' | 'vae' | 'embeddings') => {
     const paths = resolveInstallPaths(settingsStore.get('installRoot'));
-    const target = {
+    const targets: Record<typeof kind, string> = {
       checkpoints: paths.models,
       loras: paths.loras,
       vae: paths.vae,
       embeddings: paths.embeddings,
-    }[kind];
+    };
+    const target = targets[kind];
+    if (!target) return [];
     return scanDir(target, 2);
   });
 
@@ -72,6 +74,9 @@ export function registerFsChannel(win: BrowserWindow): void {
       awaitWriteFinish: { stabilityThreshold: 200, pollInterval: 50 },
     });
     activeWatcher.on('add', fire).on('unlink', fire);
+    activeWatcher.on('error', (err) => {
+      console.warn(`[fs] outputs watcher error:`, err);
+    });
     return true;
   });
 

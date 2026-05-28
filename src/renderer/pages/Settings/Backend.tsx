@@ -227,8 +227,8 @@ function OptionField({
           onChange={(e) => onChange(e.target.value)}
           className="px-2 py-1.5 rounded bg-bg-panel border border-border text-sm"
         >
-          {choices.map((c, i) => (
-            <option key={`${i}-${String(c)}`} value={String(c)}>
+          {choices.map((c) => (
+            <option key={String(c)} value={String(c)}>
               {String(c)}
             </option>
           ))}

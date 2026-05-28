@@ -181,9 +181,24 @@ export class Supervisor extends EventEmitter {
         resolve();
       };
       child.once('exit', done);
-      treeKill(pid, 'SIGTERM');
+      try {
+        treeKill(pid, 'SIGTERM', (err) => {
+          if (err) this.log('app', `treeKill SIGTERM error: ${err.message}`);
+        });
+      } catch (err) {
+        this.log('app', `treeKill SIGTERM threw: ${err instanceof Error ? err.message : String(err)}`);
+      }
       setTimeout(() => {
-        if (!resolved) treeKill(pid, 'SIGKILL', done);
+        if (resolved) return;
+        try {
+          treeKill(pid, 'SIGKILL', (err) => {
+            if (err) this.log('app', `treeKill SIGKILL error: ${err.message}`);
+            done();
+          });
+        } catch (err) {
+          this.log('app', `treeKill SIGKILL threw: ${err instanceof Error ? err.message : String(err)}`);
+          done();
+        }
       }, timeoutMs);
     });
   }

@@ -1,6 +1,14 @@
 import { dialog, ipcMain, type BrowserWindow } from 'electron';
 import { readFile } from 'node:fs/promises';
+import { extname } from 'node:path';
 import { IPC } from '../../shared/ipc/contract.js';
+
+function mimeForPath(p: string): string {
+  const ext = extname(p).toLowerCase();
+  if (ext === '.jpg' || ext === '.jpeg') return 'image/jpeg';
+  if (ext === '.webp') return 'image/webp';
+  return 'image/png';
+}
 
 export function registerDialogChannel(win: BrowserWindow): void {
   ipcMain.handle(IPC.dialog.openImage, async () => {
@@ -11,7 +19,10 @@ export function registerDialogChannel(win: BrowserWindow): void {
     if (result.canceled || result.filePaths.length === 0) return null;
     const path = result.filePaths[0]!;
     const buf = await readFile(path);
-    return { path, dataUrl: `data:image/png;base64,${buf.toString('base64')}` };
+    return {
+      path,
+      dataUrl: `data:${mimeForPath(path)};base64,${buf.toString('base64')}`,
+    };
   });
 
   ipcMain.handle(IPC.dialog.openDirectory, async () => {

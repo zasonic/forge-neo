@@ -1,8 +1,9 @@
-import { useState, type DragEvent, type ReactElement } from 'react';
+import { useEffect, useRef, useState, type DragEvent, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../lib/store.js';
 import { useTxt2ImgStore } from '../../lib/txt2imgStore.js';
 import { usePngInfoApi } from '../../hooks/useSdApi.js';
+import { applyParsedFields } from '../../lib/applyParsedToForm.js';
 import { parsePngTextChunks } from '../../lib/pngTextChunks.js';
 import { parseGenParams, type ParsedGenParams } from '../../lib/parseGenParams.js';
 
@@ -57,10 +58,25 @@ export function PngInfoPage(): ReactElement {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (toastTimerRef.current != null) {
+        window.clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = null;
+      }
+    },
+    [],
+  );
 
   const flash = (msg: string): void => {
+    if (toastTimerRef.current != null) window.clearTimeout(toastTimerRef.current);
     setToast(msg);
-    window.setTimeout(() => setToast(null), 2000);
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast(null);
+      toastTimerRef.current = null;
+    }, 2000);
   };
 
   const handleFile = async (
@@ -122,32 +138,26 @@ export function PngInfoPage(): ReactElement {
   const pickFromDialog = async (): Promise<void> => {
     const r = await window.forge.dialog.openImage();
     if (!r) return;
-    const [, base64] = r.dataUrl.split('base64,');
-    if (!base64) return;
-    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    const ab = bytes.buffer.slice(
-      bytes.byteOffset,
-      bytes.byteOffset + bytes.byteLength,
-    );
-    await handleFile(r.path, ab as ArrayBuffer, r.dataUrl);
+    try {
+      const [, base64] = r.dataUrl.split('base64,');
+      if (!base64) {
+        setLoadError('Could not read image: missing base64 payload.');
+        return;
+      }
+      const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+      const ab = bytes.buffer.slice(
+        bytes.byteOffset,
+        bytes.byteOffset + bytes.byteLength,
+      );
+      await handleFile(r.path, ab as ArrayBuffer, r.dataUrl);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : String(err));
+    }
   };
 
   const sendToTxt2Img = (): void => {
     if (!parsed) return;
-    const f = parsed.fields;
-    if (f.prompt !== undefined) setField('prompt', f.prompt);
-    if (f.negative_prompt !== undefined) setField('negative_prompt', f.negative_prompt);
-    if (f.sampler_name !== undefined) setField('sampler_name', f.sampler_name);
-    if (f.scheduler !== undefined) setField('scheduler', f.scheduler);
-    if (f.steps !== undefined) setField('steps', f.steps);
-    if (f.cfg_scale !== undefined) setField('cfg_scale', f.cfg_scale);
-    if (f.width !== undefined) setField('width', f.width);
-    if (f.height !== undefined) setField('height', f.height);
-    if (f.seed !== undefined) setField('seed', f.seed);
-    if (f.enable_hr !== undefined) setField('enable_hr', f.enable_hr);
-    if (f.hr_scale !== undefined) setField('hr_scale', f.hr_scale);
-    if (f.hr_upscaler !== undefined) setField('hr_upscaler', f.hr_upscaler);
-    if (f.denoising_strength !== undefined) setField('denoising_strength', f.denoising_strength);
+    applyParsedFields(parsed.fields, setField);
     navigate('/generate/txt2img');
   };
 

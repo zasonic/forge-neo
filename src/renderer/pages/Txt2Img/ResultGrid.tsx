@@ -30,15 +30,6 @@ export function ResultGrid(): ReactElement {
           </button>
         ))}
       </div>
-      <div className="mt-3 flex items-center gap-2 text-xs">
-        <button
-          disabled
-          title="Coming in M4"
-          className="px-3 py-1.5 rounded bg-white/5 text-white/40 cursor-not-allowed"
-        >
-          Send to img2img
-        </button>
-      </div>
       {zoom && (
         <div
           onClick={() => setZoom(null)}
