@@ -1,13 +1,14 @@
 import { ipcMain, shell } from 'electron';
-import { isAbsolute, relative, resolve } from 'node:path';
+import { isAbsolute, relative, resolve, sep } from 'node:path';
 import { IPC } from '../../shared/ipc/contract.js';
 import { settingsStore } from '../config/store.js';
 import { resolveInstallPaths } from '../../shared/paths.js';
 
 function isInside(root: string, candidate: string): boolean {
   const rel = relative(root, candidate);
-  if (rel === '' || rel === '..') return rel === '';
-  return !rel.startsWith('..') && !isAbsolute(rel);
+  if (rel === '') return true;
+  if (isAbsolute(rel)) return false;
+  return rel !== '..' && !rel.startsWith(`..${sep}`) && !rel.startsWith('../');
 }
 
 export function registerShellChannel(): void {
